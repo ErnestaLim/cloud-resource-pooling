@@ -2,41 +2,42 @@ import socket
 import threading
 
 def handle_client(conn, address):
+    client_type = conn.recv(1024).decode()
     # Save client IP to text file
-    print(f"Connection from {address}")
+    print(f"Connection from {client_type} : {address}")
     with open('client.txt', 'a') as file:
-        file.write(f"{address[0]}\n")
+        file.write(f"{address[0], address[1], client_type}\n")
+    retry_counter = 0
 
     while True:
         try:
             # When Master connects, send Master IP to Slave for connection
-            data = "Connect to THIS MASTER NODE IP:PORT" # TO BE CHANGED DURING IMPLEMENTATION
+            data = f"Connect to node {client_type} {address[0]}:{address[1]}" # TO BE CHANGED TO MASTER DETAILS DURING IMPLEMENTATION
             conn.send(data.encode())
             
-            # Receive ack from client and break
-            data = conn.recv(1024).decode()
-            if not data: # If none, break the loop
-                print(f"Connection from {address} released to master node")
+            # Blocking call - Till receive ACK from client
+            received_data = conn.recv(1024).decode()
+            if received_data == "ACK": # If server received ACK from client, release connection
+                print(f"Connection from {address} released to master node.")
                 break
-            print(f"From {address}: {data}")
-            break
-
         except:
-            # Handle disconnection or errors
-            break
+            print(f"Something went wrong with client {address}. No ACK received.")
+            retry_counter += 1 # Retry handling for disconnections or errors
+            if retry_counter == 2: # Break after retrying twice
+                break
     
-    print(f"Connection closed: {address}")
-    print(address[0])
-    delete_ip(address)
+    delete_ip(address) # Delete IP from server list
     conn.close()  # Close the connection when client disconnects
 
 def server_program():
+    # host = '192.168.1.100'  # Server IP
+    # port = 5000  # Server port number
     host = socket.gethostname() # Get the server hostname or IP
     port = 5000 # Define server port    
     server_socket = socket.socket() # Create socket instance
     server_socket.bind((host, port)) # Bind the server to the host and port
 
-    server_socket.listen(5) # Listen for up to X clients simultaneously
+    server_socket.listen(10) # Listen for up to X clients simultaneously
     print(f"Server listening on {host}:{port}")
 
     while True:
