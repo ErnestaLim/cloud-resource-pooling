@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leaderboard</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    {% include 'components/nav.html' %}
+
+    <div class="content">
+      <h2>Leaderboard</h2>
+      <p>
+        This leaderboard displays the performance of various applications in the
+        distributed computing project.
+      </p>
+      {% include 'components/leaderboard_table.html' %}
+    </div>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Download Clients</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    {% include 'components/nav.html' %}
+
+    <div class="container">
+      <section class="download-client">
+        <h3>Master Client</h3>
+        <p>Download the master client setup:</p>
+        <a
+          href="{{ url_for('download_file', filename='master_client_instructions.txt') }}"
+          >Download Master Client Instructions</a
+        >
+      </section>
+      <section class="download-client">
+        <h3>Slave Client</h3>
+        <p>Download the slave client setup:</p>
+        <a
+          href="{{ url_for('download_file', filename='slave_client_instructions.txt') }}"
+          >Download Slave Client Instructions</a
+        >
+      </section>
+    </div>
+  </body>
+</html>
