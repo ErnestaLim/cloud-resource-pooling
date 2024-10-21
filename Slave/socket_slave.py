@@ -19,11 +19,11 @@ def client_program():
     while True:
         data: List[str] = client_socket.recv(1024).decode().split(";")
         ip: str = data[1]
-        port: str = data[2]
+        port: str = '8786' # data[2]
 
         print(f"Server assigned us to {ip}:{port}.")
         print(f"Connecting to assigned address ...")
-        # subprocess.run(["dask", "worker", f"{ip}:{port}"]) 
+        subprocess.run(["dask", "worker", f"{ip}:{port}"]) 
         break
     
     client_socket.close() # close the connection

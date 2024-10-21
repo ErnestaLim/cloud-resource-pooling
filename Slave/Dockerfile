@@ -1,11 +1,17 @@
 FROM superlinear/python-gpu:3.12-cuda11.8
 
-# Update system
-RUN apt-get update && apt-get install -y build-essential cmake git unzip
+# Update system and install all tools
+RUN apt-get update && \
+    apt-get install -y build-essential cmake git unzip supervisor && \
+    pip install dask[distributed] && \
+    pip install torch torchvision torchaudio && \
+    pip install git+https://github.com/felipemaiapolo/tinyBenchmarks && \
+    apt-get remove --purge -y && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install CUDA then tinyBenchmarks
-RUN pip install torch torchvision torchaudio
-RUN pip install git+https://github.com/felipemaiapolo/tinyBenchmarks
+# Create supervisord
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Clone the lm-evaluation-harness repository
 RUN git clone https://github.com/EleutherAI/lm-evaluation-harness.git /lm-evaluation-harness
@@ -14,5 +20,9 @@ RUN git clone https://github.com/EleutherAI/lm-evaluation-harness.git /lm-evalua
 WORKDIR /lm-evaluation-harness
 RUN pip install -e .
 
-# Set the default working directory
-WORKDIR /
+# Our own socket code
+WORKDIR /app
+COPY socket_slave.py /app/socket_slave.py
+
+# Command to run the supervisord
+CMD ["python3", "-u", "socket_slave.py"]
