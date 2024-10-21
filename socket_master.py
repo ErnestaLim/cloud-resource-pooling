@@ -1,4 +1,5 @@
 import socket
+import time
 
 def master_client_program():
     # host = '192.168.1.100'  # Server IP
@@ -9,8 +10,12 @@ def master_client_program():
     client_socket.connect((host, port))    
 
     # Send initial identifer
-    indentification_data = "master"
-    client_socket.send(indentification_data.encode())
+    identification_data = "master"
+    client_socket.send(identification_data.encode())
+
+    # Simulate waiting for other script to call
+    time.sleep(1)
+    client_socket.send("request".encode())
 
     # Maintain connection till Server resolves client distribution
     while True:
@@ -18,12 +23,6 @@ def master_client_program():
         print('Received from server: ' + data)  # show in terminal
         break
     client_socket.close()  # close the connection
-
-def master_host():
-    host = socket.gethostname() # Get hostname
-    port = 5000 # Define port number
-    master_socket = socket.socket() # Create socket instance
-    master_socket.bind((host, port)) # Bind the server to the host and port
 
 if __name__ == '__main__':
     master_client_program()

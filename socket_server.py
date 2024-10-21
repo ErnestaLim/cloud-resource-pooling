@@ -1,14 +1,20 @@
 import socket
 import threading
 
+slave_nodes = []
+master_nodes = []
+
 def handle_client(conn, address):
     client_type = conn.recv(1024).decode()
     # Save client IP to text file
     print(f"Connection from {client_type} : {address}")
-    with open('client.txt', 'a') as file:
-        file.write(f"{address[0], address[1], client_type}\n")
-    retry_counter = 0
 
+    if client_type == 'slave':
+        slave_process(conn, address)
+    else:
+        master_process(conn, address)
+
+    '''
     while True:
         try:
             # When Master connects, send Master IP to Slave for connection
@@ -25,14 +31,31 @@ def handle_client(conn, address):
             retry_counter += 1 # Retry handling for disconnections or errors
             if retry_counter == 2: # Break after retrying twice
                 break
+    '''
     
-    delete_ip(address) # Delete IP from server list
-    conn.close()  # Close the connection when client disconnects
+    #delete_ip(address) # Delete IP from server list
+    #conn.close()  # Close the connection when client disconnects
+
+def slave_process(conn, address):
+    slave_nodes.append(conn)
+    
+    # Wait until master node request for slave node
+    while True:
+        pass
+
+def master_process(conn, address):
+    master_nodes.append(master_nodes)
+    
+    # Wait until master request for slave node(s)
+    while True:
+        request = conn.recv(1024).decode()
+        print("Master requesting for X slaves.")
+    
 
 def server_program():
     # host = '192.168.1.100'  # Server IP
     # port = 5000  # Server port number
-    host = socket.gethostname() # Get the server hostname or IP
+    host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP
     port = 5000 # Define server port    
     server_socket = socket.socket() # Create socket instance
     server_socket.bind((host, port)) # Bind the server to the host and port
