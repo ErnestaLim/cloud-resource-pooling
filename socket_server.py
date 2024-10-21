@@ -82,18 +82,5 @@ def server_program():
         client_thread = threading.Thread(target=handle_client, args=(conn, address)) # Create a new thread for each client
         client_thread.start()
 
-def delete_ip(client):
-    try:
-        with open('client.txt', 'r') as file:
-            lines = file.readlines()
-        lines = [line for line in lines if line.strip() != client[0]] # Filter out the IP of the disconnected client
-        with open('client.txt', 'w') as file: # Rewrite the file without the disconnected client's IP
-            file.writelines(lines)
-    # Exception if any
-    except FileNotFoundError:
-        print("IP file not found.")
-    except Exception as e:
-        print(f"Error removing IP: {e}")
-
 if __name__ == '__main__':
     server_program()
