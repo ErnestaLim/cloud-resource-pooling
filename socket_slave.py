@@ -1,5 +1,6 @@
 import socket
 from typing import List
+import subprocess
 
 def client_program():
     # host = '192.168.1.100'  # Server IP
@@ -12,6 +13,8 @@ def client_program():
     identification_data = "slave"
     client_socket.send(identification_data.encode()) # Send initial identifer
 
+    print("Connected to server. Awaiting assignment to master server ...")
+
     # Maintain connection till Server sends Master Node IP
     while True:
         data: List[str] = client_socket.recv(1024).decode().split(";")
@@ -20,6 +23,7 @@ def client_program():
 
         print(f"Server assigned us to {ip}:{port}.")
         print(f"Connecting to assigned address ...")
+        # subprocess.run(["dask", "worker", f"{ip}:{port}"]) 
         break
     
     client_socket.close() # close the connection
