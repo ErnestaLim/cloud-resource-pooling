@@ -14,15 +14,25 @@ def handle_client(conn: socket.socket, address: tuple):
     if client_type == 'slave':
         slave_process(conn, address)
     else:
+        send_email()
         master_process(conn, address)
 
 def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
     slave_nodes.append(conn)
-    
     # Wait until master node request for slave node
     while True:
         pass
+    
+def send_email():
+    host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
+    port = 61000  # Server port number    
+    client_socket = socket.socket() # Initiate connection to server
+    client_socket.connect((host, port))    
+
+    # Send initial identifer
+    email = 'resourcepoolingbot@gmail.com'
+    client_socket.send(email.encode())
 
 def master_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
