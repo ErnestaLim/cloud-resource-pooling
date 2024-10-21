@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy your scripts into the container
 COPY socket_master.py /app/socket_master.py
+COPY eval_llm.py /app/eval_llm.py
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose the necessary port for the Dask scheduler
