@@ -12,6 +12,10 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
   </head>
   <body>
     {% include 'components/nav.html' %}
@@ -26,18 +30,20 @@
             <li>
               <a
                 href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distibuted-master.tar"
+                class="download-link"
                 download
-                >Download Master Client Image</a
               >
-              <p>SHA256: <code>your-master-image-hash</code></p>
+                <i class="fas fa-download"></i> Download Master Client Image
+              </a>
             </li>
             <li>
               <a
-                href="{{ url_for('static', filename='master-dockerfile.zip') }}"
+                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Master.zip"
+                class="download-link"
                 download
-                >Download Master Dockerfile</a
               >
-              <p>SHA256: <code>your-master-dockerfile-hash</code> .zip</p>
+                <i class="fas fa-file-archive"></i> Download Master Dockerfile
+              </a>
             </li>
           </ul>
         </section>
@@ -48,18 +54,20 @@
             <li>
               <a
                 href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distributed-slave.tar"
+                class="download-link"
                 download
-                >Download Slave Client Image</a
               >
-              <p>SHA256: <code>your-slave-image-hash</code></p>
+                <i class="fas fa-download"></i> Download Slave Client Image
+              </a>
             </li>
             <li>
               <a
-                href="{{ url_for('static', filename='slave-dockerfile.zip') }}"
+                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Slave.zip"
+                class="download-link"
                 download
-                >Download Slave Dockerfile</a
               >
-              <p>SHA256: <code>your-slave-dockerfile-hash</code> .zip</p>
+                <i class="fas fa-file-archive"></i> Download Slave Dockerfile
+              </a>
             </li>
           </ul>
         </section>
