@@ -1,0 +1,122 @@
+body {
+  font-family: "Montserrat", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Apply the font to other elements as needed */
+h1,
+h2,
+h3,
+p,
+a {
+  font-family: "Montserrat", sans-serif;
+}
+
+header {
+  background-color: #1f1f1f;
+  color: #ffffff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo img {
+  height: 40px;
+  margin-right: 10px; /* Add some space between the image and the text */
+}
+
+.logo-link span {
+  text-decoration: none; /* Ensure no underline */
+}
+
+.logo-link:hover span {
+  text-decoration: none; /* Ensure no underline on hover */
+}
+
+nav a {
+  color: #bb86fc;
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: bold;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+.content {
+  margin: 20px;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.download-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.download-client {
+  flex: 1;
+  margin: 10px;
+  padding: 20px;
+  background-color: #2c2c2c;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+h2,
+h3 {
+  margin: 0 0 10px;
+  color: #ffffff;
+}
+
+p {
+  margin: 0 0 20px;
+}
+
+a {
+  color: #bb86fc;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #333333;
+}
+
+th {
+  background-color: #2c2c2c;
+  color: #ffffff;
+}

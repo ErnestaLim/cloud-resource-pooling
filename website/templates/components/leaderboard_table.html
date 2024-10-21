@@ -1,0 +1,24 @@
+<table>
+  <tr>
+    <th>Application</th>
+    <th>Average</th>
+    <th>IFEval</th>
+    <th>BBH</th>
+    <th>MATH Lvl 5</th>
+    <th>GPQA</th>
+    <th>MUSR</th>
+    <th>MMLU-PRO</th>
+  </tr>
+  {% for entry in data %}
+  <tr>
+    <td>{{ entry.application }}</td>
+    <td>{{ entry.average }}</td>
+    <td>{{ entry.ifeval }}</td>
+    <td>{{ entry.bbh }}</td>
+    <td>{{ entry.math_lvl_5 }}</td>
+    <td>{{ entry.gpqa }}</td>
+    <td>{{ entry.musr }}</td>
+    <td>{{ entry.mmlu_pro }}</td>
+  </tr>
+  {% endfor %}
+</table>
