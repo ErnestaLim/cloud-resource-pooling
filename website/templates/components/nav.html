@@ -1,0 +1,15 @@
+<header>
+  <div class="logo">
+    <a href="{{ url_for('index') }}" class="logo-link">
+      <img
+        src="{{ url_for('static', filename='assets/logo.webp') }}"
+        alt="Logo"
+      />
+      <span>Distributed Computing</span>
+    </a>
+  </div>
+  <nav>
+    <a href="{{ url_for('downloads') }}">Downloads</a>
+    <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+  </nav>
+</header>
