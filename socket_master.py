@@ -1,3 +1,4 @@
+import json
 import socket
 import time
 
@@ -13,15 +14,24 @@ def master_client_program():
     identification_data = "master"
     client_socket.send(identification_data.encode())
 
-    # Simulate waiting for other script to call
-    time.sleep(1)
-    client_socket.send("request".encode())
-
     # Maintain connection till Server resolves client distribution
     while True:
-        data = client_socket.recv(1024).decode()  # receive response
-        print('Received from server: ' + data)  # show in terminal
-        break
+        # Simulate waiting for other script to call
+        time.sleep(1)
+        client_socket.send("request;1".encode())
+        print("Requesting central server for 1 slave ...")
+
+        # Wait for response (blocking call)
+        response = client_socket.recv(1024).decode()
+        response_data = json.loads(response)
+
+        if response_data['success'] == False :
+            print(f"Error: {response_data['message']}")
+            print("Request failed. Retrying ...")
+        else:
+            print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
+            break
+
     client_socket.close()  # close the connection
 
 if __name__ == '__main__':

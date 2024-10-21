@@ -1,4 +1,5 @@
 import socket
+from typing import List
 
 def client_program():
     # host = '192.168.1.100'  # Server IP
@@ -13,10 +14,12 @@ def client_program():
 
     # Maintain connection till Server sends Master Node IP
     while True:
-        data = client_socket.recv(1024).decode()  # Receive master IP
-        print('Received master IP & Port: ' + data)
-        ack_data = "ACK"
-        client_socket.send(ack_data.encode()) # Send ACK
+        data: List[str] = client_socket.recv(1024).decode().split(";")
+        ip: str = data[1]
+        port: str = data[2]
+
+        print(f"Server assigned us to {ip}:{port}.")
+        print(f"Connecting to assigned address ...")
         break
     
     client_socket.close() # close the connection
