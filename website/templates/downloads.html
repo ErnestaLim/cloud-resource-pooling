@@ -21,21 +21,47 @@
       <div class="download-container">
         <section class="download-client">
           <h3>Master Client</h3>
-          <p>Download the master client setup:</p>
-          <a
-            href="https://d3ggzb9hx6l7ab.cloudfront.net/hello-world.tar"
-            download
-            >Download Master Client</a
-          >
+          <p>Download options for the master client:</p>
+          <ul>
+            <li>
+              <a
+                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distibuted-master.tar"
+                download
+                >Download Master Client Image</a
+              >
+              <p>SHA256: <code>your-master-image-hash</code></p>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('static', filename='master-dockerfile.zip') }}"
+                download
+                >Download Master Dockerfile</a
+              >
+              <p>SHA256: <code>your-master-dockerfile-hash</code> .zip</p>
+            </li>
+          </ul>
         </section>
         <section class="download-client">
           <h3>Slave Client</h3>
-          <p>Download the slave client setup:</p>
-          <a
-            href="https://d3ggzb9hx6l7ab.cloudfront.net/hello-world.tar"
-            download
-            >Download Slave Client</a
-          >
+          <p>Download options for the slave client:</p>
+          <ul>
+            <li>
+              <a
+                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distributed-slave.tar"
+                download
+                >Download Slave Client Image</a
+              >
+              <p>SHA256: <code>your-slave-image-hash</code></p>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('static', filename='slave-dockerfile.zip') }}"
+                download
+                >Download Slave Dockerfile</a
+              >
+              <p>SHA256: <code>your-slave-dockerfile-hash</code> .zip</p>
+            </li>
+          </ul>
         </section>
       </div>
     </div>
