@@ -1,13 +1,9 @@
+import argparse
 import socket
 from typing import List
 import subprocess
 
-def client_program():
-    # host = '192.168.1.100'  # Server IP
-    # port = 5000  # Server port
-
-    host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
-    port = 5000  # Server port number    
+def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
     client_socket.connect((host, port))    
     identification_data = "slave"
@@ -30,4 +26,10 @@ def client_program():
     return data
 
 if __name__ == '__main__':
-    master_ip = client_program()
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Client program to connect to a server.')
+    parser.add_argument('--ip', type=str, default=socket.gethostbyname(socket.gethostname()), help='Server IP address')
+    parser.add_argument('--port', type=int, default=5000, help='Server port number')
+    args = parser.parse_args()
+    
+    master_ip = client_program(args.ip, args.port)

@@ -25,4 +25,4 @@ WORKDIR /app
 COPY socket_slave.py /app/socket_slave.py
 
 # Command to run the supervisord
-CMD ["python3", "-u", "socket_slave.py"]
+ENTRYPOINT ["python3", "-u", "socket_slave.py"]
