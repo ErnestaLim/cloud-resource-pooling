@@ -115,17 +115,55 @@ p {
   margin: 0 0 25px; /* Increased bottom margin */
 }
 
-/* Flash messages styling */
+/* Flash messages container */
 .flashes {
   list-style-type: none;
   padding: 0;
   margin: 15px 0; /* Increased top and bottom margin */
 }
 
+/* General styling for flash messages */
 .flashes li {
-  margin: 8px 0; /* Increased vertical margin */
-  padding: 12px; /* Increased padding */
-  border-radius: 5px;
+  margin: 10px 0; /* Increased vertical margin */
+  padding: 15px; /* Increased padding */
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px; /* Larger font for better visibility */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-align: center; /* Center text alignment */
+}
+
+/* Success messages */
+.flashes li.success {
+  background-color: #4caf50; /* Bright green */
+  color: #ffffff; /* White text */
+  border: 2px solid #388e3c; /* Darker green border */
+}
+
+/* Error messages */
+.flashes li.danger {
+  background-color: #f44336; /* Bright red */
+  color: #ffffff; /* White text */
+  border: 2px solid #d32f2f; /* Darker red border */
+}
+
+/* Info messages */
+.flashes li.info {
+  background-color: #2196f3; /* Bright blue */
+  color: #ffffff; /* White text */
+  border: 2px solid #1976d2; /* Darker blue border */
+}
+
+/* Warning messages */
+.flashes li.warning {
+  background-color: #ff9800; /* Bright orange */
+  color: #ffffff; /* White text */
+  border: 2px solid #f57c00; /* Darker orange border */
+}
+
+/* Adding transition for smooth appearance */
+.flashes li {
+  transition: all 0.3s ease;
 }
 
 /* Form styling */
