@@ -1,27 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Distributed Computing Project</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('static', filename='styles.css') }}"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    {% include 'components/nav.html' %}
-
-    <div class="content">
-      <h2>About the Project</h2>
-      <p>
-        This project is focused on distributed computing for research purposes,
-        including various applications.
-      </p>
-    </div>
-  </body>
-</html>
+{% extends 'base.html' %} {% block title %}Distributed Computing Project{%
+endblock %} {% block content %}
+<div class="content">
+  <h1>About the Project</h1>
+  <p>
+    This project is focused on distributed computing for research purposes,
+    including various applications.
+  </p>
+</div>
+{% endblock %}
