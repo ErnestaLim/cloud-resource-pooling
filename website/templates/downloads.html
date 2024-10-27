@@ -1,77 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Download Clients</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('static', filename='styles.css') }}"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-  </head>
-  <body>
-    {% include 'components/nav.html' %}
+{% extends 'base.html' %} {% block title %}Download Clients{% endblock %} {%
+block content %}
+<div class="content">
+  <h2>Download Clients</h2>
 
-    <div class="content">
-      <h2>Download Clients</h2>
-      <div class="download-container">
-        <section class="download-client">
-          <h3>Master Client</h3>
-          <p>Download options for the master client:</p>
-          <ul>
-            <li>
-              <a
-                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distibuted-master.tar"
-                class="download-link"
-                download
-              >
-                <i class="fas fa-download"></i> Download Master Client Image
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Master.zip"
-                class="download-link"
-                download
-              >
-                <i class="fas fa-file-archive"></i> Download Master Dockerfile
-              </a>
-            </li>
-          </ul>
-        </section>
-        <section class="download-client">
-          <h3>Slave Client</h3>
-          <p>Download options for the slave client:</p>
-          <ul>
-            <li>
-              <a
-                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distributed-slave.tar"
-                class="download-link"
-                download
-              >
-                <i class="fas fa-download"></i> Download Slave Client Image
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Slave.zip"
-                class="download-link"
-                download
-              >
-                <i class="fas fa-file-archive"></i> Download Slave Dockerfile
-              </a>
-            </li>
-          </ul>
-        </section>
+  <div class="download-container">
+    <!-- Master Client Section -->
+    <div class="download-client">
+      <h3>Master Client</h3>
+      <p>Download options for the master client:</p>
+      <div class="button-group">
+        <a
+          href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distibuted-master.tar"
+          class="download-link"
+          download
+        >
+          <i class="fas fa-download"></i> Download Master Image
+        </a>
+        <a
+          href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Master.zip"
+          class="download-link"
+          download
+        >
+          <i class="fas fa-download"></i> Download Master Dockerfile
+        </a>
       </div>
     </div>
-  </body>
-</html>
+
+    <!-- Slave Client Section -->
+    <div class="download-client">
+      <h3>Slave Client</h3>
+      <p>Download options for the slave client:</p>
+      <div class="button-group">
+        <a
+          href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/sit-distributed-slave.tar"
+          class="download-link"
+          download
+        >
+          <i class="fas fa-download"></i> Download Slave Image
+        </a>
+        <a
+          href="https://hello-wld-bucket.s3.ap-southeast-1.amazonaws.com/Slave.zip"
+          class="download-link"
+          download
+        >
+          <i class="fas fa-download"></i> Download Slave Dockerfile
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
