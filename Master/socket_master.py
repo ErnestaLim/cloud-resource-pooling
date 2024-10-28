@@ -3,6 +3,7 @@ import socket
 import time
 import asyncio
 from dask.distributed import Scheduler, Worker, Client
+from distributed import SchedulerPlugin
 
 def master_client_program():
     # host = '192.168.1.100'  # Server IP
@@ -43,10 +44,20 @@ def master_client_program():
 
     client_socket.close()  # close the connection
 
+class MasterSchedulerPlugin(SchedulerPlugin):
+    def __init__(self):
+        super().__init__()
+
+    def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
+        # Add custom processing logic here
+        print("A task has been received by the scheduler.")
+        # You can manipulate the graph or perform logging, pre-processing, etc.
+
 async def master_loop():
-    s = Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786)        # scheduler created, but not yet running
-    s = await s            # the scheduler is running
-    await s.finished()     # wait until the scheduler closes
+    async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
+        plugin = MasterSchedulerPlugin()
+        scheduler.add_plugin(plugin)  # Register the custom plugin
+        await scheduler.finished()    # Wait until the scheduler closes
 
 if __name__ == '__main__':
-    master_client_program()
+    asyncio.run(master_loop())
