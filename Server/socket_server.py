@@ -2,10 +2,10 @@ import json
 import socket
 import threading
 from typing import List
+import send_email
 
 slave_nodes: List[socket.socket] = []
 master_nodes: List[socket.socket] = []
-
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
     # Save client IP to text file
@@ -14,25 +14,15 @@ def handle_client(conn: socket.socket, address: tuple):
     if client_type == 'slave':
         slave_process(conn, address)
     else:
-        send_email()
         master_process(conn, address)
 
 def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
     slave_nodes.append(conn)
+    
     # Wait until master node request for slave node
     while True:
         pass
-    
-def send_email():
-    host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
-    port = 61000  # Server port number    
-    client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))    
-
-    # Send initial identifer
-    email = 'resourcepoolingbot@gmail.com'
-    client_socket.send(email.encode())
 
 def master_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
@@ -78,8 +68,6 @@ def master_process(conn: socket.socket, address: tuple):
     
 
 def server_program():
-    # host = '192.168.1.100'  # Server IP
-    # port = 5000  # Server port number
     host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP
     port = 5000 # Define server port    
     server_socket = socket.socket() # Create socket instance
