@@ -44,7 +44,7 @@ class MasterSchedulerPlugin(SchedulerPlugin):
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
         # Add custom processing logic here
         print("A task has been received by the scheduler. Requesting 1 slave from Server.")
-        request_slaves(2)
+        request_slaves(1)
         # You can manipulate the graph or perform logging, pre-processing, etc.
 
 async def master_loop():
