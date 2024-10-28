@@ -40,7 +40,7 @@ def master_process(conn: socket.socket, address: tuple):
             print(f"We have {len(slave_nodes)} slave nodes.")
 
             # Check if we have enough slave
-            if len(slave_nodes) == 0:
+            if len(slave_nodes) < slave_requested:
                 response = {
                     "success": False,
                     "message": "Not enough slave nodes."

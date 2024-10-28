@@ -5,7 +5,7 @@ import asyncio
 from dask.distributed import Scheduler, Worker, Client
 from distributed import SchedulerPlugin
 
-def request_slaves():
+def request_slaves(amount: int):
     # host = '192.168.1.100'  # Server IP
     # port = 5000  # Server port
     host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
@@ -21,8 +21,8 @@ def request_slaves():
     while True:
         # Simulate waiting for other script to call
         time.sleep(1)
-        client_socket.send("request;1".encode())
-        print("Requesting central server for 1 slave ...")
+        client_socket.send(f"request;{amount}".encode())
+        print(f"Requesting central server for {amount} slave(s) ...")
 
         # Wait for response (blocking call)
         response = client_socket.recv(1024).decode()
@@ -44,7 +44,7 @@ class MasterSchedulerPlugin(SchedulerPlugin):
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
         # Add custom processing logic here
         print("A task has been received by the scheduler. Requesting 1 slave from Server.")
-        request_slaves()
+        request_slaves(2)
         # You can manipulate the graph or perform logging, pre-processing, etc.
 
 async def master_loop():
