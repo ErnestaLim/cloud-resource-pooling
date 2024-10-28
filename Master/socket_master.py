@@ -5,7 +5,7 @@ import asyncio
 from dask.distributed import Scheduler, Worker, Client
 from distributed import SchedulerPlugin
 
-def master_client_program():
+def request_slaves():
     # host = '192.168.1.100'  # Server IP
     # port = 5000  # Server port
     host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
@@ -17,30 +17,23 @@ def master_client_program():
     identification_data = "master"
     client_socket.send(identification_data.encode())
 
-    # Flag
-    broker_started: bool = False
-
     # Maintain connection till Server resolves client distribution
     while True:
-        if not broker_started:
-            # Simulate waiting for other script to call
-            time.sleep(1)
-            client_socket.send("request;1".encode())
-            print("Requesting central server for 1 slave ...")
+        # Simulate waiting for other script to call
+        time.sleep(1)
+        client_socket.send("request;1".encode())
+        print("Requesting central server for 1 slave ...")
 
-            # Wait for response (blocking call)
-            response = client_socket.recv(1024).decode()
-            response_data = json.loads(response)
+        # Wait for response (blocking call)
+        response = client_socket.recv(1024).decode()
+        response_data = json.loads(response)
 
-            if response_data['success'] == False :
-                print(f"Error: {response_data['message']}")
-                print("Request failed. Retrying ...")
-            else:
-                broker_started = True
-                print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
-                asyncio.get_event_loop().run_until_complete(master_loop())
+        if response_data['success'] == False :
+            print(f"Error: {response_data['message']}")
+            print("Request failed. Retrying ...")
         else:
-            print("test")
+            print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
+            break
 
     client_socket.close()  # close the connection
 
@@ -50,7 +43,8 @@ class MasterSchedulerPlugin(SchedulerPlugin):
 
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
         # Add custom processing logic here
-        print("A task has been received by the scheduler.")
+        print("A task has been received by the scheduler. Requesting 1 slave from Server.")
+        request_slaves()
         # You can manipulate the graph or perform logging, pre-processing, etc.
 
 async def master_loop():
