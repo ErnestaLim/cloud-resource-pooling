@@ -37,22 +37,40 @@ def request_slaves(amount: int):
 
     client_socket.close()  # close the connection
 
-def add(x=None, y=None):  # simple handler, just a function
-    return x + y
+def _worker_evalute_llm():
+    return 100
+
+def _evalute_llm():
+    print('connecting to scheduler')
+    client = Client('192.168.1.7:8786')
+    print('connected to scheduler')
+
+    # Submit the task to the scheduler
+    future = client.submit(_worker_evalute_llm)
+    print('sumitted to worker')
+
+    # Get the result once the worker completes the task
+    result = future.result()
+    print("Result:", result)
+
+    return result
+
+async def evaluate_llm():
+    result = await asyncio.to_thread(_evalute_llm)
+    return result
 
 class MasterSchedulerPlugin(SchedulerPlugin):
     def __init__(self):
         super().__init__()
 
+    # On new custom task received
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
-        # Add custom processing logic here
         print("A task has been received by the scheduler. Requesting 1 slave from Server.")
         request_slaves(1)
-        # You can manipulate the graph or perform logging, pre-processing, etc.
 
 async def master_loop():
     async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
-        scheduler.handlers["add"] = add
+        scheduler.handlers["evaluate_llm"] = evaluate_llm
         plugin = MasterSchedulerPlugin()
         scheduler.add_plugin(plugin)  # Register the custom plugin
         await scheduler.finished()    # Wait until the scheduler closes
