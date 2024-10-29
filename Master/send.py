@@ -1,7 +1,10 @@
-from dask.distributed import Client
+import asyncio
+from distributed import rpc
 
-def compute_task():
-    return 10
+async def send_add():
+    remote = rpc('192.168.1.7:8786')
+    response = await remote.add(x=10, y=20)  
+    remote.close_comms()  
+    print(response)
 
-client = Client('192.168.1.7:8786')
-client._send_to_scheduler({'op': 'add', 'x': 1, 'y': 2})
+asyncio.run(send_add())

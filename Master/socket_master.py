@@ -37,8 +37,8 @@ def request_slaves(amount: int):
 
     client_socket.close()  # close the connection
 
-def add(client=None, x=None, y=None):  # simple handler, just a function
-    print(type(client))
+def add(x=None, y=None):  # simple handler, just a function
+    return x + y
 
 class MasterSchedulerPlugin(SchedulerPlugin):
     def __init__(self):
@@ -52,7 +52,7 @@ class MasterSchedulerPlugin(SchedulerPlugin):
 
 async def master_loop():
     async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
-        scheduler.stream_handlers["add"] = add
+        scheduler.handlers["add"] = add
         plugin = MasterSchedulerPlugin()
         scheduler.add_plugin(plugin)  # Register the custom plugin
         await scheduler.finished()    # Wait until the scheduler closes
