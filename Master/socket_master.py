@@ -1,5 +1,8 @@
+import glob
 import json
+import os
 import socket
+import subprocess
 import time
 import asyncio
 from dask.distributed import Scheduler, Worker, Client
@@ -38,16 +41,42 @@ def request_slaves(amount: int):
     client_socket.close()  # close the connection
 
 def _worker_evalute_llm():
-    return 100
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+    output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
+    
+    # Run a command and capture its output
+    command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
+    subprocess.run(command, shell=True, check=True)
+
+    # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
+    json_files = glob.glob(os.path.join(output_dir, "*.json"))
+    
+    if not json_files:
+        return {
+            'success': False,
+            'message': "No JSON files found in the directory."
+        }
+
+    # Get the latest JSON file based on modification time
+    latest_json_file = max(json_files, key=os.path.getmtime)
+
+    # Read the content of the JSON file
+    with open(latest_json_file, 'r') as f:
+        json_content = json.load(f)
+
+    # Return both the computation result and the JSON content
+    return {
+        'success': True,
+        'message': "Successfully evaluated LLM.",
+        'json_content': json_content
+    }
 
 def _evalute_llm():
-    print('connecting to scheduler')
     client = Client('192.168.1.7:8786')
-    print('connected to scheduler')
 
     # Submit the task to the scheduler
     future = client.submit(_worker_evalute_llm)
-    print('sumitted to worker')
 
     # Get the result once the worker completes the task
     result = future.result()
