@@ -5,10 +5,10 @@ import os
 import pickle
 import socket
 import subprocess
+import threading
 import time
 import asyncio
-from dask.distributed import Scheduler, Worker, Client, fire_and_forget
-from distributed import SchedulerPlugin
+from typing import List
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description='Client program to connect to a server.')
@@ -43,7 +43,6 @@ def request_slaves(amount: int):
             print(f"Error: {response_data['message']}")
             print("Request failed. Retrying ...")
         else:
-            print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
             client_socket.close()
             break
 
@@ -135,15 +134,17 @@ def _worker_evalute_llm(username, llm_name, eval_name):
     }
 
 def _evalute_llm():
+    '''
     client = Client('192.168.1.5:8786')
-
-    results = {
-        "tinyMMLU": None,
-    }
 
     # Submit the task to the scheduler
     future = client.submit(_worker_evalute_llm, username="bernard", llm_name="160m", eval_name="tinyMMLU")
     fire_and_forget(future)
+    '''
+
+    results = {
+        "tinyMMLU": None,
+    }
 
     # Wait for the task to complete, by checking with storage nodes
     while any(value is None for value in results.values()):
@@ -193,20 +194,49 @@ async def evaluate_llm():
     result = await asyncio.to_thread(_evalute_llm)
     return result
 
-class MasterSchedulerPlugin(SchedulerPlugin):
-    def __init__(self):
-        super().__init__()
+slave_nodes: List[socket.socket] = []
+llm_tasks: List[tuple] = []
 
-    # On new custom task received
-    def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
-        request_slaves(1)
+def handle_conn(conn: socket.socket, address: tuple):
+    parameters = conn.recv(1024).decode().split(";")
+    action = parameters[0]
+    
+    if action == "do_llm_eval":
+        task_process(conn, address, parameters)
+    elif action == "connect":
+        slave_process(conn, address)
+
+def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
+    username = parameters[1]
+    llm_name = parameters[2]
+
+    print(f"Received task from {username} -> {llm_name}.")
+    llm_tasks.append((username, llm_name))
+    request_slaves(1)
+
+def slave_process(conn: socket.socket, address: tuple):
+    print(f"Slave {address[0]}:{address[1]} connected.")
+    slave_nodes.append(conn)
+
+    task = llm_tasks.pop(0)
+
+    # Keep connection alive till new task is received
+    while True:
+        pass
 
 async def master_loop():
-    async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
-        scheduler.handlers["evaluate_llm"] = evaluate_llm
-        plugin = MasterSchedulerPlugin()
-        scheduler.add_plugin(plugin)  # Register the custom plugin
-        await scheduler.finished()    # Wait until the scheduler closes
+    host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP
+    port = 8786 # Define server port    
+    server_socket = socket.socket() # Create socket instance
+    server_socket.bind((host, port)) # Bind the server to the host and port
+
+    server_socket.listen(10) # Listen for up to X clients simultaneously
+    print(f"Master listening on {host}:{port}")
+
+    while True:
+        conn, address = server_socket.accept() # Accept new connections
+        client_thread = threading.Thread(target=handle_conn, args=(conn, address)) # Create a new thread for each client
+        client_thread.start()
 
 if __name__ == '__main__':
     asyncio.run(master_loop())

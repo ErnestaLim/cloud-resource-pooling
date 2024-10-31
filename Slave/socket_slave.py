@@ -40,23 +40,27 @@ async def client_program(host: str, port: int):
 
         if action == 'connect':
             ip: str = data[1]
-            port: str = '8786' # data[2]
+            port: int = int('8786') # data[2]
 
-            # Connect as dask worker to assigned master server
-            print(f"Server assigned us to {ip}:{port}.")
-            print(f"Connecting to assigned address ...")
-            worker = Worker(ip, port)
-            print("Connecting to master server ...")
-            worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
-            await worker.start()
-            print("Connected to master server. Awaiting task ...")
-            await worker.finished()
-            break
+            slave_loop(ip, port)
         elif action == 'connect_storage':
             client_socket.send(f"start_storage_node;{receive_port}".encode())
             storage_loop()
     
     return True
+
+def slave_loop(ip: str, port: int):
+    print(f"Server assigned us to {ip}:{port}.")
+    print(f"Connecting to assigned address ...")
+
+    _socket = socket.socket() # Initiate connection to server
+    _socket.connect((ip, port))
+    _socket.send("connect".encode()) # Send initial identifer
+
+    print("Connected to master server. Awaiting task ...")
+
+    while True:
+        pass
 
 def storage_loop():
     storage_socket = socket.socket()

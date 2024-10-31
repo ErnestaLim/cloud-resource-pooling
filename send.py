@@ -1,10 +1,10 @@
-import asyncio
-from distributed import rpc
+import socket
 
-async def evaluate_llm():
-    remote = rpc('192.168.1.5:8786')
-    response = await remote.evaluate_llm()  
-    remote.close_comms()
-    print(response)
+client_socket = socket.socket() # Initiate connection to server
+client_socket.connect(('192.168.1.5', 8786))    
 
-asyncio.run(evaluate_llm())
+# Send request
+client_socket.send("do_llm_eval;bernard;160m".encode())
+
+results = client_socket.recv(1024).decode()
+print(results)
