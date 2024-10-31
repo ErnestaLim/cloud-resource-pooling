@@ -28,15 +28,17 @@ def slave_process(conn: socket.socket, address: tuple):
 
     # If there is no X storage nodes, we assign them as dedicated storage node
     if len(storage_nodes) < 1:
-        print(f"Requesting {address[0]}:{address[1]} to be a storage node.")
+        print(f"Requesting {address[0]} to be a storage node.")
         conn.sendall("connect_storage;".encode())
 
         while True:
-            reply = conn.recv(1024).decode()
+            reply = conn.recv(1024).decode().split(";")
+            action = reply[0]
+            storage_port = reply[1]
 
-            if reply == "start_storage_node":
-                storage_nodes.append(conn.getpeername())
-                print(f"Storage {address[0]}:{address[1]} node connected.")
+            if action == "start_storage_node":
+                storage_nodes.append((conn.getpeername()[0], int(storage_port)))
+                print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
     else:
         slave_nodes.append(conn)
     

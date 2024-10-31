@@ -49,7 +49,7 @@ async def client_program(host: str, port: int):
             await worker.finished()
             break
         elif action == 'connect_storage':
-            client_socket.send("start_storage_node".encode())
+            client_socket.send(f"start_storage_node;{receive_port}".encode())
             storage_loop()
     
     return True
