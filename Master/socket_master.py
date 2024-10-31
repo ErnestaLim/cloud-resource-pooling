@@ -5,7 +5,7 @@ import socket
 import subprocess
 import time
 import asyncio
-from dask.distributed import Scheduler, Worker, Client
+from dask.distributed import Scheduler, Worker, Client, fire_and_forget
 from distributed import SchedulerPlugin
 
 def request_slaves(amount: int):
@@ -41,7 +41,12 @@ def request_slaves(amount: int):
 
     return response_data['addresses']
 
-def _worker_evalute_llm():
+# Runs on storage node
+def _storage_node_store(msater_address, result):
+    # Store the result in the storage node
+    pass
+
+def _worker_evalute_llm(storage_nodes):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
@@ -79,19 +84,19 @@ def _evalute_llm():
     # Get two dedicated volunteer nodes from the server
     print("Requesting 2 storage nodes from the server ...")
     storage_nodes = request_slaves(2)
+
+    for storage_node in storage_nodes:
+        pass
     
     # Get one node for LLM evaluation
     print("Requesting 1 node for LLM evaluation ...")
     llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}")
+    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}", storage_nodes=storage_nodes)
+    fire_and_forget(future)
 
-    # Get the result once the worker completes the task
-    result = future.result()
-    print("Result:", result)
-
-    return result
+    return 22
 
 async def evaluate_llm():
     result = await asyncio.to_thread(_evalute_llm)
