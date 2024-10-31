@@ -27,7 +27,7 @@ def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
 
     # If there is no X storage nodes, we assign them as dedicated storage node
-    if len(storage_nodes) < 2:
+    if len(storage_nodes) < 1:
         storage_nodes.append(conn.getpeername())
         print(f"Assigned {address[0]}:{address[1]} as storage node.")
         conn.sendall("connect_storage;".encode())
