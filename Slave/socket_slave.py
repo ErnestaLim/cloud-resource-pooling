@@ -120,6 +120,7 @@ def storage_delete(conn, address, parameters):
         return
     
     # Delete the results
+    print(f"Deleted {username} -> {llm_name} results.")
     del storage_results[username][llm_name]
 
 if __name__ == '__main__':
