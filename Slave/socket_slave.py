@@ -3,7 +3,17 @@ import asyncio
 import socket
 import threading
 from typing import List
-from distributed import Worker
+from distributed import Worker, WorkerPlugin
+
+# Custom worker plugin to disconnect worker when task is complete
+class DisconnectOnTaskComplete(WorkerPlugin):
+    def __init__(self, client):
+        self.client = client
+
+    def transition(self, key, start, finish, *args, **kwargs):
+        # Check if the transition is to 'finished' state
+        if finish == 'memory':
+            exit()
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
@@ -30,6 +40,7 @@ async def client_program(host: str, port: int):
             print(f"Server assigned us to {ip}:{port}.")
             print(f"Connecting to assigned address ...")
             worker = Worker(ip, port, host = f"{client_ip}:{client_port}")
+            worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
             await worker.start()
             await worker.finished()
             break

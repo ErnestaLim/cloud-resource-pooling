@@ -103,6 +103,9 @@ def _worker_evalute_llm(master_address, eval_name):
         # Send initial identifer
         message = f"{master_address[0]}:{master_address[1]};tinyM{eval_name};{results}"
         client_socket.send(message.encode())
+    
+    print("Results sent to storage nodes.")
+    print("Restarting slave node ...")
 
     # Return both the computation result and the JSON content
     return {
