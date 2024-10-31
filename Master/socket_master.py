@@ -62,14 +62,25 @@ def get_storage_nodes():
 
     return storage_nodes
 
-def _evalute_llm():
-    '''
-    client = Client('192.168.1.5:8786')
+slave_nodes: List[socket.socket] = []
+llm_tasks: List[tuple] = []
 
-    # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm, username="bernard", llm_name="160m", eval_name="tinyMMLU")
-    fire_and_forget(future)
-    '''
+def handle_conn(conn: socket.socket, address: tuple):
+    parameters = conn.recv(1024).decode().split(";")
+    action = parameters[0]
+    
+    if action == "do_llm_eval":
+        task_process(conn, address, parameters)
+    elif action == "connect":
+        slave_process(conn, address)
+
+def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
+    username = parameters[1]
+    llm_name = parameters[2]
+
+    print(f"Received task from {username} -> {llm_name}.")
+    llm_tasks.append((username, llm_name))
+    request_slaves(1)
 
     results = {
         "tinyMMLU": None,
@@ -116,32 +127,9 @@ def _evalute_llm():
         storage_socket.close()
     
     print("Deleted results from storage nodes. Replying to user request ...")
-
-    return results
-
-async def evaluate_llm():
-    result = await asyncio.to_thread(_evalute_llm)
-    return result
-
-slave_nodes: List[socket.socket] = []
-llm_tasks: List[tuple] = []
-
-def handle_conn(conn: socket.socket, address: tuple):
-    parameters = conn.recv(1024).decode().split(";")
-    action = parameters[0]
     
-    if action == "do_llm_eval":
-        task_process(conn, address, parameters)
-    elif action == "connect":
-        slave_process(conn, address)
-
-def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
-    username = parameters[1]
-    llm_name = parameters[2]
-
-    print(f"Received task from {username} -> {llm_name}.")
-    llm_tasks.append((username, llm_name))
-    request_slaves(1)
+    # Send results back to user
+    conn.sendall(pickle.dumps(results))
 
 def slave_process(conn: socket.socket, address: tuple):
     print(f"Slave {address[0]}:{address[1]} connected.")
