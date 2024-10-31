@@ -77,6 +77,8 @@ def handle_slave(conn, address):
         storage_store(conn, address, parameters)
     elif action == "retrieve":
         storage_retrieve(conn, address, parameters)
+    elif action == "delete":
+        storage_delete(conn, address, parameters)
 
 def storage_store(conn, address, parameters):
     username = parameters[1]
@@ -108,6 +110,17 @@ def storage_retrieve(conn, address, parameters):
     
     # Pickle the results and send over the connection
     conn.send(pickle.dumps(results))
+
+def storage_delete(conn, address, parameters):
+    username = parameters[1]
+    llm_name = parameters[2]
+    
+    # Check if the user and llm_name are in storage_results
+    if username not in storage_results or llm_name not in storage_results[username]:
+        return
+    
+    # Delete the results
+    del storage_results[username][llm_name]
 
 if __name__ == '__main__':
     # Set up argument parser

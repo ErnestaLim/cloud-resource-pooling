@@ -57,8 +57,6 @@ def get_storage_nodes():
     message = "get_storage_nodes"
     client_socket.send(message.encode())
 
-    print("Requesting central server for storage nodes' addresses ...")
-
     # Wait for response (blocking call)
     response = client_socket.recv(4096)
     storage_nodes = pickle.loads(response)
@@ -73,8 +71,9 @@ def _worker_evalute_llm(username, llm_name, eval_name):
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    subprocess.run(command, shell=True, check=True)
+    #subprocess.run(command, shell=True, check=True)
 
+    '''
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
     
@@ -92,6 +91,7 @@ def _worker_evalute_llm(username, llm_name, eval_name):
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
         results = json_content['results']
+    '''
     
     results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
     print("Evaluation completed. Sending results ...")
@@ -157,7 +157,7 @@ def _evalute_llm():
             storage_socket = socket.socket() # Initiate connection to server
             storage_socket.connect((storage_node[0], storage_node[1]))    
 
-            # Send initial identifer
+            # Send retrieve action
             message = f"retrieve;bernard;160m"
             storage_socket.send(message.encode())
 
@@ -170,8 +170,25 @@ def _evalute_llm():
                 for key, value in result.items():
                     if key in results and results[key] is None:
                         results[key] = value
+            
+            storage_socket.close()
     
-    print("All results received.")
+    print("All results received. Deleting results from storage nodes ...")
+
+    # Delete from storage nodes
+    storage_nodes = get_storage_nodes()
+    for storage_node in storage_nodes:
+        storage_socket = socket.socket() # Initiate connection to server
+        storage_socket.connect((storage_node[0], storage_node[1]))    
+
+        # Send delete action
+        message = f"delete;bernard;160m"
+        storage_socket.send(message.encode())
+
+        storage_socket.close()
+    
+    print("Deleted results from storage nodes. Replying to user request ...")
+
     return results
 
 async def evaluate_llm():
