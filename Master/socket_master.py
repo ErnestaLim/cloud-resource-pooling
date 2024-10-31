@@ -8,7 +8,9 @@ import asyncio
 from dask.distributed import Scheduler, Worker, Client, fire_and_forget
 from distributed import SchedulerPlugin
 
-def request_slaves(amount: int):
+master_address = socket.gethostbyname(socket.gethostname())
+
+def request_slaves(amount: int, is_storage_node: bool = False):
     # host = '192.168.1.100'  # Server IP
     # port = 5000  # Server port
     host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
@@ -24,29 +26,42 @@ def request_slaves(amount: int):
     while True:
         # Simulate waiting for other script to call
         time.sleep(1)
-        client_socket.send(f"request;{amount}".encode())
-        print(f"Requesting central server for {amount} slave(s) ...")
 
-        # Wait for response (blocking call)
-        response = client_socket.recv(1024).decode()
-        response_data = json.loads(response)
+        if not is_storage_node:
+            client_socket.send(f"request;{amount}".encode())
+            print(f"Requesting central server for {amount} slave(s) ...")
 
-        if response_data['success'] == False :
-            print(f"Error: {response_data['message']}")
-            print("Request failed. Retrying ...")
+            # Wait for response (blocking call)
+            response = client_socket.recv(1024).decode()
+            response_data = json.loads(response)
+
+            if response_data['success'] == False :
+                print(f"Error: {response_data['message']}")
+                print("Request failed. Retrying ...")
+            else:
+                print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
+                client_socket.close()
+                break
         else:
-            print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
-            client_socket.close()
-            break
+            # Request for storage nodes
+            client_socket.send(f"request_storage;{amount}".encode())
+            print(f"Requesting central server for {amount} storage node(s) ...")
+
+            # Wait for response (blocking call)
+            response = client_socket.recv(1024).decode()
+            response_data = json.loads(response)
+
+            if response_data['success'] == False :
+                print(f"Error: {response_data['message']}")
+                print("Request failed. Retrying ...")
+            else:
+                print(f"Centeral server provided {len(response_data['addresses'])} storage nodes.")
+                client_socket.close()
+                break
 
     return response_data['addresses']
 
-# Runs on storage node
-def _storage_node_store(msater_address, result):
-    # Store the result in the storage node
-    pass
-
-def _worker_evalute_llm(storage_nodes):
+def _worker_evalute_llm(storage_nodes, master_address, eval_name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
@@ -70,6 +85,16 @@ def _worker_evalute_llm(storage_nodes):
     # Read the content of the JSON file
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
+        results = json_content['results']
+    
+    # Send to stroage nodes
+    for storage_node in storage_nodes:
+        client_socket = socket.socket() # Initiate connection to server
+        client_socket.connect((storage_node[0], storage_node[1]))    
+
+        # Send initial identifer
+        message = f"{master_address[0]}:{master_address[1]};tinyM{eval_name};{results}"
+        client_socket.send(message.encode())
 
     # Return both the computation result and the JSON content
     return {
@@ -81,19 +106,16 @@ def _worker_evalute_llm(storage_nodes):
 def _evalute_llm():
     client = Client('192.168.1.5:8786')
 
-    # Get two dedicated volunteer nodes from the server
+    # Get two dedicated storage nodes from the server
     print("Requesting 2 storage nodes from the server ...")
-    storage_nodes = request_slaves(2)
-
-    for storage_node in storage_nodes:
-        pass
+    storage_nodes = request_slaves(2, is_storage_node=True)
     
     # Get one node for LLM evaluation
     print("Requesting 1 node for LLM evaluation ...")
     llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}", storage_nodes=storage_nodes)
+    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}", storage_nodes=storage_nodes, master_address=master_address, eval_name="tinyMMLU")
     fire_and_forget(future)
 
     return 22

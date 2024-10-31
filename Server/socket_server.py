@@ -34,7 +34,7 @@ def master_process(conn: socket.socket, address: tuple):
         req_type: str = data[0]
         req_args: List[str] = data[1:]
 
-        if req_type == 'request':
+        if req_type == 'request' or req_type == 'request_storage':
             slave_requested: int = int(req_args[0])
             print(f"{address[0]}:{address[1]} requested for {slave_requested} slaves.")
             print(f"We have {len(slave_nodes)} slave nodes.")
@@ -54,8 +54,12 @@ def master_process(conn: socket.socket, address: tuple):
 
                 # Tell slave node to connect to master node
                 for slave_node in addresses:
-                    print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]}.")
-                    slave_node.send(f"connect;{address[0]};{address[1]}".encode())
+                    if req_type == 'request':
+                        print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]}.")
+                        slave_node.send(f"connect;{address[0]};{address[1]}".encode())
+                    else:
+                        print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]} as storage node.")
+                        slave_node.send(f"connect_storage;{address[0]};{address[1]}".encode())
                 
                 # Send success to master node
                 response = {
