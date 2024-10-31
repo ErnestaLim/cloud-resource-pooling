@@ -49,6 +49,22 @@ def request_slaves(amount: int):
 
     return response_data['addresses']
 
+def get_storage_nodes():  
+    client_socket = socket.socket() # Initiate connection to server
+    client_socket.connect((host, port))
+
+    # Send initial identifer
+    message = "get_storage_nodes"
+    client_socket.send(message.encode())
+
+    print("Requesting central server for storage nodes' addresses ...")
+
+    # Wait for response (blocking call)
+    response = client_socket.recv(4096)
+    storage_nodes = pickle.loads(response)
+
+    return storage_nodes
+
 def _worker_evalute_llm(username, llm_name, eval_name):
     print("Task received. Evaluating LLM ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -57,9 +73,8 @@ def _worker_evalute_llm(username, llm_name, eval_name):
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    #subprocess.run(command, shell=True, check=True)
+    subprocess.run(command, shell=True, check=True)
 
-    '''
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
     
@@ -77,7 +92,6 @@ def _worker_evalute_llm(username, llm_name, eval_name):
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
         results = json_content['results']
-    '''
     
     results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
     print("Evaluation completed. Sending results ...")
@@ -109,7 +123,7 @@ def _worker_evalute_llm(username, llm_name, eval_name):
         storage_socket.connect((storage_node[0], storage_node[1]))    
 
         # Send initial identifer
-        message = f"{username};{llm_name};{eval_name};{results}"
+        message = f"store;{username};{llm_name};{eval_name};{results}"
         storage_socket.send(message.encode())
     
     print("Results sent to storage nodes.")
@@ -125,11 +139,40 @@ def _worker_evalute_llm(username, llm_name, eval_name):
 def _evalute_llm():
     client = Client('192.168.1.5:8786')
 
+    results = {
+        "tinyMMLU": None,
+    }
+
     # Submit the task to the scheduler
     future = client.submit(_worker_evalute_llm, username="bernard", llm_name="160m", eval_name="tinyMMLU")
     fire_and_forget(future)
 
-    return 22
+    # Wait for the task to complete, by checking with storage nodes
+    while any(value is None for value in results.values()):
+        time.sleep(1)
+        print("Waiting for storage nodes to send results ...")
+        storage_nodes = get_storage_nodes()
+        
+        for storage_node in storage_nodes:
+            storage_socket = socket.socket() # Initiate connection to server
+            storage_socket.connect((storage_node[0], storage_node[1]))    
+
+            # Send initial identifer
+            message = f"retrieve;bernard;160m"
+            storage_socket.send(message.encode())
+
+            # Receive response data from the server
+            response_data = storage_socket.recv(4096)
+            result = pickle.loads(response_data)
+            
+            # Check if result is not None and set it in the dictionary
+            if result is not None:
+                for key, value in result.items():
+                    if key in results and results[key] is None:
+                        results[key] = value
+    
+    print("All results received.")
+    return results
 
 async def evaluate_llm():
     result = await asyncio.to_thread(_evalute_llm)

@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import pickle
 import socket
 import threading
 from time import sleep
@@ -70,12 +71,19 @@ def storage_loop():
 
 def handle_slave(conn, address):
     parameters = conn.recv(1024).decode().split(";")
-    username = parameters[0]
-    llm_name = parameters[1]
-    eval_name = parameters[2]
-    result = parameters[3]
+    action = parameters[0]
+    
+    if action == "store":
+        storage_store(conn, address, parameters)
+    elif action == "retrieve":
+        storage_retrieve(conn, address, parameters)
 
-    # Save client IP to text file
+def storage_store(conn, address, parameters):
+    username = parameters[1]
+    llm_name = parameters[2]
+    eval_name = parameters[3]
+    result = parameters[4]
+    
     print(f"New result -> {username} -> {llm_name} -> {eval_name} -> {result}.")
 
     if username not in storage_results:
@@ -85,6 +93,21 @@ def handle_slave(conn, address):
         storage_results[username][llm_name] = {}
     
     storage_results[username][llm_name][eval_name] = result
+
+def storage_retrieve(conn, address, parameters):
+    username = parameters[1]
+    llm_name = parameters[2]
+    
+    # Check if the user and llm_name are in storage_results
+    if username not in storage_results or llm_name not in storage_results[username]:
+        conn.send(pickle.dumps(None))  # Send None if no results are found
+        return
+    
+    # Get the results
+    results = storage_results[username][llm_name]
+    
+    # Pickle the results and send over the connection
+    conn.send(pickle.dumps(results))
 
 if __name__ == '__main__':
     # Set up argument parser
