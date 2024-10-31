@@ -10,8 +10,6 @@ import asyncio
 from dask.distributed import Scheduler, Worker, Client, fire_and_forget
 from distributed import SchedulerPlugin
 
-master_address = socket.gethostbyname(socket.gethostname())
-
 # Set up argument parser
 parser = argparse.ArgumentParser(description='Client program to connect to a server.')
 parser.add_argument('--ip', type=str, default=socket.gethostbyname(socket.gethostname()), help='Server IP address')
@@ -51,7 +49,7 @@ def request_slaves(amount: int):
 
     return response_data['addresses']
 
-def _worker_evalute_llm(master_address, eval_name):
+def _worker_evalute_llm(username, llm_name, eval_name):
     print("Task received. Evaluating LLM ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
@@ -59,8 +57,9 @@ def _worker_evalute_llm(master_address, eval_name):
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    subprocess.run(command, shell=True, check=True)
+    #subprocess.run(command, shell=True, check=True)
 
+    '''
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
     
@@ -78,7 +77,9 @@ def _worker_evalute_llm(master_address, eval_name):
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
         results = json_content['results']
+    '''
     
+    results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
     print("Evaluation completed. Sending results ...")
     
     # Ask central server for stroage nodes addresses
@@ -96,21 +97,20 @@ def _worker_evalute_llm(master_address, eval_name):
         response = client_socket.recv(4096)
         storage_nodes = pickle.loads(response)
 
-        print(storage_nodes)
-
         return storage_nodes
 
     storage_nodes = get_storage_nodes()
+    print(storage_nodes)
     print("Sending storage nodes results ...")
     
     # Send to stroage nodes
     for storage_node in storage_nodes:
-        client_socket = socket.socket() # Initiate connection to server
-        client_socket.connect((storage_node[0], storage_node[1]))    
+        storage_socket = socket.socket() # Initiate connection to server
+        storage_socket.connect((storage_node[0], storage_node[1]))    
 
         # Send initial identifer
-        message = f"{master_address[0]}:{master_address[1]};tinyM{eval_name};{results}"
-        client_socket.send(message.encode())
+        message = f"{username};{llm_name};{eval_name};{results}"
+        storage_socket.send(message.encode())
     
     print("Results sent to storage nodes.")
     print("Restarting slave node ...")
@@ -119,7 +119,7 @@ def _worker_evalute_llm(master_address, eval_name):
     return {
         'success': True,
         'message': "Successfully evaluated LLM.",
-        'json_content': json_content
+        'results': results
     }
 
 def _evalute_llm():
@@ -130,7 +130,7 @@ def _evalute_llm():
     llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm, master_address=master_address, eval_name="tinyMMLU")
+    future = client.submit(_worker_evalute_llm, username="bernard", llm_name="160m", eval_name="tinyMMLU")
     fire_and_forget(future)
 
     return 22

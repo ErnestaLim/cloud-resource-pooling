@@ -10,6 +10,8 @@ client_host = "0.0.0.0"
 send_port = 51591
 receive_port = 51592
 
+storage_results = {}
+
 # Custom worker plugin to disconnect worker when task is complete
 class DisconnectOnTaskComplete(WorkerPlugin):
     def __init__(self, client):
@@ -66,16 +68,22 @@ def storage_loop():
         client_thread.start()
 
 def handle_slave(conn, address):
-    master_key_result = conn.recv(1024).decode()
-    parameters = master_key_result.split(";")
-    ip = conn.getsockname()[0]
-    port = conn.getsockname()[1]
-    master = parameters[0]
-    key = parameters[1]
-    result = parameters[2]
+    parameters = conn.recv(1024).decode().split(";")
+    username = parameters[0]
+    llm_name = parameters[1]
+    eval_name = parameters[2]
+    result = parameters[3]
 
     # Save client IP to text file
-    print(f"New result from {ip}:{port} -> {master}'s {key} score {result}.")
+    print(f"New result -> {username} -> {llm_name} -> {eval_name} -> {result}.")
+
+    if username not in storage_results:
+        storage_results[username] = {}
+    
+    if llm_name not in storage_results[username]:
+        storage_results[username][llm_name] = {}
+    
+    storage_results[username][llm_name][eval_name] = result
 
 if __name__ == '__main__':
     # Set up argument parser
