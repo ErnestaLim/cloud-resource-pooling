@@ -36,9 +36,10 @@ def request_slaves(amount: int):
             print("Request failed. Retrying ...")
         else:
             print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
+            client_socket.close()
             break
 
-    client_socket.close()  # close the connection
+    return response_data['addresses']
 
 def _worker_evalute_llm():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -73,10 +74,18 @@ def _worker_evalute_llm():
     }
 
 def _evalute_llm():
-    client = Client('192.168.1.7:8786')
+    client = Client('192.168.1.5:8786')
+
+    # Get two dedicated volunteer nodes from the server
+    print("Requesting 2 storage nodes from the server ...")
+    storage_nodes = request_slaves(2)
+    
+    # Get one node for LLM evaluation
+    print("Requesting 1 node for LLM evaluation ...")
+    llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm)
+    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}")
 
     # Get the result once the worker completes the task
     result = future.result()
@@ -94,8 +103,8 @@ class MasterSchedulerPlugin(SchedulerPlugin):
 
     # On new custom task received
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
-        print("A task has been received by the scheduler. Requesting 1 slave from Server.")
-        request_slaves(1)
+        # TODO: If not LLM eval, request for one slave
+        pass
 
 async def master_loop():
     async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
