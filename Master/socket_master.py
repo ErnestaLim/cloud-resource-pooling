@@ -124,10 +124,6 @@ def _worker_evalute_llm(username, llm_name, eval_name):
 
 def _evalute_llm():
     client = Client('192.168.1.5:8786')
-    
-    # Get one node for LLM evaluation
-    print("Requesting 1 node for LLM evaluation ...")
-    llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
     future = client.submit(_worker_evalute_llm, username="bernard", llm_name="160m", eval_name="tinyMMLU")
@@ -145,8 +141,7 @@ class MasterSchedulerPlugin(SchedulerPlugin):
 
     # On new custom task received
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kwargs):
-        # TODO: If not LLM eval, request for one slave
-        pass
+        request_slaves(1)
 
 async def master_loop():
     async with Scheduler(host=socket.gethostbyname(socket.gethostname()), port=8786) as scheduler:
