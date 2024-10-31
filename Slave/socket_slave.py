@@ -2,8 +2,13 @@ import argparse
 import asyncio
 import socket
 import threading
+from time import sleep
 from typing import List
 from distributed import Worker, WorkerPlugin
+
+client_host = "0.0.0.0"
+send_port = 51591
+receive_port = 51592
 
 # Custom worker plugin to disconnect worker when task is complete
 class DisconnectOnTaskComplete(WorkerPlugin):
@@ -17,20 +22,17 @@ class DisconnectOnTaskComplete(WorkerPlugin):
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))    
-    client_ip, client_port = client_socket.getsockname()
+    client_socket.bind((client_host, send_port))
+    client_socket.connect((host, port))
     identification_data = "slave"
     client_socket.send(identification_data.encode()) # Send initial identifer
 
-    print(f"Connected to server as {client_ip}:{client_port}. Awaiting assignment to master server ...")
+    print(f"Connected to server as {client_host}:{send_port}. Awaiting assignment to master server ...")
 
     # Maintain connection till Server sends Master Node IP
     while True:
         data: List[str] = client_socket.recv(1024).decode().split(";")
         action = data[0]
-
-        # Close connection to central server
-        client_socket.close()
 
         if action == 'connect':
             ip: str = data[1]
@@ -39,25 +41,25 @@ async def client_program(host: str, port: int):
             # Connect as dask worker to assigned master server
             print(f"Server assigned us to {ip}:{port}.")
             print(f"Connecting to assigned address ...")
-            worker = Worker(ip, port, host = f"{client_ip}:{client_port}")
+            worker = Worker(ip, port)
             worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
             await worker.start()
             await worker.finished()
             break
         elif action == 'connect_storage':
-            storage_loop(host=client_ip, port=client_port)
+            client_socket.send("start_storage_node".encode())
+            storage_loop()
     
     return True
 
-def storage_loop(host, port):
-    server_socket = socket.socket()
-    server_socket.bind((host, port))
-
-    server_socket.listen(10)
-    print(f"Storage server listening on {host}:{port}")
+def storage_loop():
+    storage_socket = socket.socket()
+    storage_socket.bind((client_host, receive_port))
+    storage_socket.listen(10)
+    print(f"Storage server listening on {client_host}:{receive_port}")
 
     while True:
-        conn, address = server_socket.accept() # Accept new connections
+        conn, address = storage_socket.accept() # Accept new connections
         client_thread = threading.Thread(target=handle_slave, args=(conn, address)) # Create a new thread for each client
         client_thread.start()
 

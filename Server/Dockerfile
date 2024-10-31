@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy your script into the container
+COPY /send_email.py /app/send_email.py
 COPY /socket_server.py /app/socket_server.py
 
 # Expose the necessary port for the Dask scheduler
