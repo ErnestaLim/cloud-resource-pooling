@@ -62,77 +62,6 @@ def get_storage_nodes():
 
     return storage_nodes
 
-def _worker_evalute_llm(username, llm_name, eval_name):
-    print("Task received. Evaluating LLM ...")
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)
-    output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
-    
-    # Run a command and capture its output
-    command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    subprocess.run(command, shell=True, check=True)
-
-    # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
-    json_files = glob.glob(os.path.join(output_dir, "*.json"))
-    
-    if not json_files:
-        print("No JSON files found in the directory. Task failed.")
-        return {
-            'success': False,
-            'message': "No JSON files found in the directory."
-        }
-
-    # Get the latest JSON file based on modification time
-    latest_json_file = max(json_files, key=os.path.getmtime)
-
-    # Read the content of the JSON file
-    with open(latest_json_file, 'r') as f:
-        json_content = json.load(f)
-        results = json_content['results']
-    
-    results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
-    print("Evaluation completed. Sending results ...")
-    
-    # Ask central server for stroage nodes addresses
-    def get_storage_nodes():  
-        client_socket = socket.socket() # Initiate connection to server
-        client_socket.connect((host, port))
-
-        # Send initial identifer
-        message = "get_storage_nodes"
-        client_socket.send(message.encode())
-
-        print("Requesting central server for storage nodes' addresses ...")
-
-        # Wait for response (blocking call)
-        response = client_socket.recv(4096)
-        storage_nodes = pickle.loads(response)
-
-        return storage_nodes
-
-    storage_nodes = get_storage_nodes()
-    print(storage_nodes)
-    print("Sending storage nodes results ...")
-    
-    # Send to stroage nodes
-    for storage_node in storage_nodes:
-        storage_socket = socket.socket() # Initiate connection to server
-        storage_socket.connect((storage_node[0], storage_node[1]))    
-
-        # Send initial identifer
-        message = f"store;{username};{llm_name};{eval_name};{results}"
-        storage_socket.send(message.encode())
-    
-    print("Results sent to storage nodes.")
-    print("Restarting slave node ...")
-
-    # Return both the computation result and the JSON content
-    return {
-        'success': True,
-        'message': "Successfully evaluated LLM.",
-        'results': results
-    }
-
 def _evalute_llm():
     '''
     client = Client('192.168.1.5:8786')
@@ -219,6 +148,7 @@ def slave_process(conn: socket.socket, address: tuple):
     slave_nodes.append(conn)
 
     task = llm_tasks.pop(0)
+    conn.send(f"do_llm_eval;{task[0]};{task[1]};tinyMMLU".encode())
 
     # Keep connection alive till new task is received
     while True:

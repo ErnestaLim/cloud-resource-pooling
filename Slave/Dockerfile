@@ -22,6 +22,7 @@ RUN pip install -e .
 
 # Our own socket code
 WORKDIR /app
+COPY helper.py /app/helper.py
 COPY socket_slave.py /app/socket_slave.py
 
 EXPOSE 51592
