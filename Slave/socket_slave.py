@@ -110,13 +110,7 @@ def slave_evalute_llm(username, llm_name, eval_name):
     
     print("Results sent to storage nodes.")
     print("Restarting slave node ...")
-
-    # Return both the computation result and the JSON content
-    return {
-        'success': True,
-        'message': "Successfully evaluated LLM.",
-        'results': results
-    }
+    exit(1)
 
 def storage_loop():
     storage_socket = socket.socket()
