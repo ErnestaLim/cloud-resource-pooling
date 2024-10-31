@@ -42,8 +42,10 @@ async def client_program(host: str, port: int):
             print(f"Server assigned us to {ip}:{port}.")
             print(f"Connecting to assigned address ...")
             worker = Worker(ip, port)
-            worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
+            print("Connecting to master server ...")
+            #worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
             await worker.start()
+            print("Connected to master server. Awaiting task ...")
             await worker.finished()
             break
         elif action == 'connect_storage':

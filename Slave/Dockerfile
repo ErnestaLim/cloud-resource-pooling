@@ -24,5 +24,7 @@ RUN pip install -e .
 WORKDIR /app
 COPY socket_slave.py /app/socket_slave.py
 
+EXPOSE 51592
+
 # Command to run the supervisord
 ENTRYPOINT ["python3", "-u", "socket_slave.py"]

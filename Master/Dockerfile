@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Install Dask with distributed support and supervisor
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    supervisor \
     && pip install dask[distributed] \
     && apt-get remove --purge -y \
     && apt-get autoremove -y \
@@ -14,11 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy your scripts into the container
 COPY socket_master.py /app/socket_master.py
-COPY eval_llm.py /app/eval_llm.py
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose the necessary port for the Dask scheduler
 EXPOSE 8786
+EXPOSE 8787
 
 # Command to run the supervisord
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["python3", "-u", "socket_master.py"]

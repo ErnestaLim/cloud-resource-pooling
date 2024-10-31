@@ -1,3 +1,4 @@
+import argparse
 import glob
 import json
 import os
@@ -11,11 +12,16 @@ from distributed import SchedulerPlugin
 
 master_address = socket.gethostbyname(socket.gethostname())
 
+# Set up argument parser
+parser = argparse.ArgumentParser(description='Client program to connect to a server.')
+parser.add_argument('--ip', type=str, default=socket.gethostbyname(socket.gethostname()), help='Server IP address')
+parser.add_argument('--port', type=int, default=5000, help='Server port number')
+args = parser.parse_args()
+
+host = args.ip # Initiate connection to server
+port = args.port  # Server port number    
+
 def request_slaves(amount: int):
-    # host = '192.168.1.100'  # Server IP
-    # port = 5000  # Server port
-    host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
-    port = 5000  # Server port number    
     client_socket = socket.socket() # Initiate connection to server
     client_socket.connect((host, port))    
 
@@ -46,18 +52,20 @@ def request_slaves(amount: int):
     return response_data['addresses']
 
 def _worker_evalute_llm(master_address, eval_name):
+    print("Task received. Evaluating LLM ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    #subprocess.run(command, shell=True, check=True)
+    subprocess.run(command, shell=True, check=True)
 
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
     
     if not json_files:
+        print("No JSON files found in the directory. Task failed.")
         return {
             'success': False,
             'message': "No JSON files found in the directory."
@@ -71,10 +79,10 @@ def _worker_evalute_llm(master_address, eval_name):
         json_content = json.load(f)
         results = json_content['results']
     
+    print("Evaluation completed. Sending results ...")
+    
     # Ask central server for stroage nodes addresses
-    def get_storage_nodes():
-        host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
-        port = 5000  # Server port number    
+    def get_storage_nodes():  
         client_socket = socket.socket() # Initiate connection to server
         client_socket.connect((host, port))
 
