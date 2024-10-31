@@ -19,8 +19,9 @@ class DisconnectOnTaskComplete(WorkerPlugin):
 
     def transition(self, key, start, finish, *args, **kwargs):
         # Check if the transition is to 'finished' state
+        # Exit with 1 (error code) so Docker container restarts
         if finish == 'memory':
-            exit()
+            exit(1)
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
@@ -45,7 +46,7 @@ async def client_program(host: str, port: int):
             print(f"Connecting to assigned address ...")
             worker = Worker(ip, port)
             print("Connecting to master server ...")
-            #worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
+            worker.plugins['disconnect'] = DisconnectOnTaskComplete(worker)
             await worker.start()
             print("Connected to master server. Awaiting task ...")
             await worker.finished()
