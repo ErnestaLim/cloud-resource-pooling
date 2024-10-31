@@ -3,8 +3,6 @@ import asyncio
 import socket
 import threading
 from typing import List
-import subprocess
-
 from distributed import Worker
 
 async def client_program(host: str, port: int): 

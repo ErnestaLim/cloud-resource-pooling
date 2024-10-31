@@ -1,4 +1,5 @@
 import json
+import pickle
 import socket
 import threading
 from typing import List
@@ -6,6 +7,8 @@ import send_email
 
 slave_nodes: List[socket.socket] = []
 master_nodes: List[socket.socket] = []
+storage_nodes: List[tuple] = []
+
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
     # Save client IP to text file
@@ -13,12 +16,23 @@ def handle_client(conn: socket.socket, address: tuple):
 
     if client_type == 'slave':
         slave_process(conn, address)
-    else:
+    elif client_type == 'master':
         master_process(conn, address)
+    elif client_type == 'get_storage_nodes':
+        conn.sendall(pickle.dumps(storage_nodes))
+    else:
+        conn.close()
 
 def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
-    slave_nodes.append(conn)
+
+    # If there is no X storage nodes, we assign them as dedicated storage node
+    if len(storage_nodes) < 2:
+        storage_nodes.append(conn.getpeername())
+        print(f"Assigned {address[0]}:{address[1]} as storage node.")
+        conn.sendall("connect_storage;".encode())
+    else:
+        slave_nodes.append(conn)
     
     # Wait until master node request for slave node
     while True:
@@ -54,12 +68,8 @@ def master_process(conn: socket.socket, address: tuple):
 
                 # Tell slave node to connect to master node
                 for slave_node in addresses:
-                    if req_type == 'request':
-                        print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]}.")
-                        slave_node.send(f"connect;{address[0]};{address[1]}".encode())
-                    else:
-                        print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]} as storage node.")
-                        slave_node.send(f"connect_storage;{address[0]};{address[1]}".encode())
+                    print(f"Assigned {slave_node.getsockname()[0]}:{slave_node.getsockname()[1]} to {address[0]}:{address[1]}.")
+                    slave_node.send(f"connect;{address[0]};{address[1]}".encode())
                 
                 # Send success to master node
                 response = {
@@ -69,7 +79,6 @@ def master_process(conn: socket.socket, address: tuple):
                 conn.sendall(json.dumps(response).encode())
 
                 continue
-    
 
 def server_program():
     host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP

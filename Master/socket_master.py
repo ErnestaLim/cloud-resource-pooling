@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import pickle
 import socket
 import subprocess
 import time
@@ -10,7 +11,7 @@ from distributed import SchedulerPlugin
 
 master_address = socket.gethostbyname(socket.gethostname())
 
-def request_slaves(amount: int, is_storage_node: bool = False):
+def request_slaves(amount: int):
     # host = '192.168.1.100'  # Server IP
     # port = 5000  # Server port
     host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
@@ -27,48 +28,31 @@ def request_slaves(amount: int, is_storage_node: bool = False):
         # Simulate waiting for other script to call
         time.sleep(1)
 
-        if not is_storage_node:
-            client_socket.send(f"request;{amount}".encode())
-            print(f"Requesting central server for {amount} slave(s) ...")
+        client_socket.send(f"request;{amount}".encode())
+        print(f"Requesting central server for {amount} slave(s) ...")
 
-            # Wait for response (blocking call)
-            response = client_socket.recv(1024).decode()
-            response_data = json.loads(response)
+        # Wait for response (blocking call)
+        response = client_socket.recv(1024).decode()
+        response_data = json.loads(response)
 
-            if response_data['success'] == False :
-                print(f"Error: {response_data['message']}")
-                print("Request failed. Retrying ...")
-            else:
-                print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
-                client_socket.close()
-                break
+        if response_data['success'] == False :
+            print(f"Error: {response_data['message']}")
+            print("Request failed. Retrying ...")
         else:
-            # Request for storage nodes
-            client_socket.send(f"request_storage;{amount}".encode())
-            print(f"Requesting central server for {amount} storage node(s) ...")
-
-            # Wait for response (blocking call)
-            response = client_socket.recv(1024).decode()
-            response_data = json.loads(response)
-
-            if response_data['success'] == False :
-                print(f"Error: {response_data['message']}")
-                print("Request failed. Retrying ...")
-            else:
-                print(f"Centeral server provided {len(response_data['addresses'])} storage nodes.")
-                client_socket.close()
-                break
+            print(f"Centeral server provided {len(response_data['addresses'])} nodes. Waiting for slave to connect ...")
+            client_socket.close()
+            break
 
     return response_data['addresses']
 
-def _worker_evalute_llm(storage_nodes, master_address, eval_name):
+def _worker_evalute_llm(master_address, eval_name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    subprocess.run(command, shell=True, check=True)
+    #subprocess.run(command, shell=True, check=True)
 
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
@@ -86,6 +70,30 @@ def _worker_evalute_llm(storage_nodes, master_address, eval_name):
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
         results = json_content['results']
+    
+    # Ask central server for stroage nodes addresses
+    def get_storage_nodes():
+        host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
+        port = 5000  # Server port number    
+        client_socket = socket.socket() # Initiate connection to server
+        client_socket.connect((host, port))
+
+        # Send initial identifer
+        message = "get_storage_nodes"
+        client_socket.send(message.encode())
+
+        print("Requesting central server for storage nodes' addresses ...")
+
+        # Wait for response (blocking call)
+        response = client_socket.recv(4096)
+        storage_nodes = pickle.loads(response)
+
+        print(storage_nodes)
+
+        return storage_nodes
+
+    storage_nodes = get_storage_nodes()
+    print("Sending storage nodes results ...")
     
     # Send to stroage nodes
     for storage_node in storage_nodes:
@@ -105,17 +113,13 @@ def _worker_evalute_llm(storage_nodes, master_address, eval_name):
 
 def _evalute_llm():
     client = Client('192.168.1.5:8786')
-
-    # Get two dedicated storage nodes from the server
-    print("Requesting 2 storage nodes from the server ...")
-    storage_nodes = request_slaves(2, is_storage_node=True)
     
     # Get one node for LLM evaluation
     print("Requesting 1 node for LLM evaluation ...")
     llm_nodes = request_slaves(1)
 
     # Submit the task to the scheduler
-    future = client.submit(_worker_evalute_llm, workers=f"{llm_nodes[0][0]}:{llm_nodes[0][1]}", storage_nodes=storage_nodes, master_address=master_address, eval_name="tinyMMLU")
+    future = client.submit(_worker_evalute_llm, master_address=master_address, eval_name="tinyMMLU")
     fire_and_forget(future)
 
     return 22
