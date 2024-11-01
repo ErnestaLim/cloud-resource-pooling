@@ -19,9 +19,32 @@ args = parser.parse_args()
 host = args.ip # Initiate connection to server
 port = args.port  # Server port number    
 
+# Store tasks locally in json
+TASK_FILE = "test.json"
+
+def save_tasks_to_file(tasks: List[str]):
+    try:
+    # Save to a JSON file
+        with open(TASK_FILE, 'w') as f:
+            json.dump(tasks, f)
+        print("Data saved successfully!")
+    except Exception as e:
+        print(f"An error occurred while saving data: {e}")
+    
+def load_tasks_from_file() -> List[tuple]:
+    try: 
+        if os.path.exists(TASK_FILE):
+            with open(TASK_FILE, 'r') as f:
+                tasks = json.load(f)
+            print("Tasks loaded from file.")
+            return [tuple(task) for task in tasks]
+        return []
+    except Exception as e:
+        print(f"An error occurred while loading data: {e}")
+
 def request_slaves(amount: int):
     client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))    
+    client_socket.connect((host, port))
 
     # Send initial identifer
     identification_data = "master"
@@ -63,13 +86,17 @@ def get_storage_nodes():
     return storage_nodes
 
 slave_nodes: List[socket.socket] = []
-llm_tasks: List[tuple] = []
+llm_tasks: List[tuple] = load_tasks_from_file() # Initialize llm_tasks by loading from file else []
 
 def handle_conn(conn: socket.socket, address: tuple):
     parameters = conn.recv(1024).decode().split(";")
     action = parameters[0]
     
     if action == "do_llm_eval":
+        print(parameters)
+        print(type(parameters))
+        save_tasks_to_file(parameters)
+
         task_process(conn, address, parameters)
     elif action == "connect":
         slave_process(conn, address)
@@ -78,9 +105,10 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
     username = parameters[1]
     llm_name = parameters[2]
 
-    print(f"Received task from {username} -> {llm_name}.")
-    llm_tasks.append((username, llm_name))
-    request_slaves(1)
+    if not llm_tasks:
+        print(f"Received task from {username} -> {llm_name}.")
+        llm_tasks.append((username, llm_name))
+        request_slaves(1)
 
     results = {
         "tinyMMLU": None,
