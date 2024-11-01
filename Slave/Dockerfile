@@ -2,7 +2,7 @@ FROM superlinear/python-gpu:3.12-cuda11.8
 
 # Update system and install all tools
 RUN apt-get update && \
-    apt-get install -y build-essential cmake git unzip supervisor && \
+    apt-get install -y build-essential cmake git unzip && \
     pip install torch torchvision torchaudio && \
     pip install git+https://github.com/felipemaiapolo/tinyBenchmarks && \
     apt-get remove --purge -y && \
