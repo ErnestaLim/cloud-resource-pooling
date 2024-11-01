@@ -8,7 +8,7 @@ def recursive_call():
     while reconnection_flag == 1:
         client_socket = socket.socket()
         try:
-            client_socket.connect(('192.168.0.180', 8786))
+            client_socket.connect(('192.168.1.5', 8786))
             reconnection_flag = 0
             print("Connected to server. Sending task ...")
             client_socket.send("do_llm_eval;bernard;160m".encode()) # Send request
