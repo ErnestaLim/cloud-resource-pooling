@@ -34,11 +34,14 @@ def slave_process(conn: socket.socket, address: tuple):
         while True:
             reply = conn.recv(1024).decode().split(";")
             action = reply[0]
-            storage_port = reply[1]
 
             if action == "start_storage_node":
+                storage_port = reply[1]
                 storage_nodes.append((conn.getpeername()[0], int(storage_port)))
                 print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
+            elif action == "heartbeat":
+                print("Heartbeat received.")
+                conn.sendall("heartbeat-ack".encode())
     else:
         slave_nodes.append(conn)
     

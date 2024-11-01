@@ -3,7 +3,6 @@ FROM superlinear/python-gpu:3.12-cuda11.8
 # Update system and install all tools
 RUN apt-get update && \
     apt-get install -y build-essential cmake git unzip supervisor && \
-    pip install dask[distributed] && \
     pip install torch torchvision torchaudio && \
     pip install git+https://github.com/felipemaiapolo/tinyBenchmarks && \
     apt-get remove --purge -y && \
@@ -23,6 +22,7 @@ RUN pip install -e .
 # Our own socket code
 WORKDIR /app
 COPY helper.py /app/helper.py
+COPY socket_storage.py /app/socket_storage.py
 COPY socket_slave.py /app/socket_slave.py
 
 EXPOSE 51592
