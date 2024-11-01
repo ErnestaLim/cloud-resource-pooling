@@ -70,9 +70,8 @@ def slave_evalute_llm(username, llm_name, eval_name):
     
     # Run a command and capture its output
     command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
-    #subprocess.run(command, shell=True, check=True)
+    subprocess.run(command, shell=True, check=True)
 
-    '''
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory
     json_files = glob.glob(os.path.join(output_dir, "*.json"))
     
@@ -90,7 +89,6 @@ def slave_evalute_llm(username, llm_name, eval_name):
     with open(latest_json_file, 'r') as f:
         json_content = json.load(f)
         results = json_content['results']
-    '''
     
     results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
     print("Evaluation completed. Sending results ...")
