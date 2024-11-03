@@ -49,11 +49,18 @@ def slave_process(conn: socket.socket, address: tuple):
     
     # Wait until master node request for slave node
     while True:
-        time.sleep(1)
+        reply = conn.recv(1024).decode()
+
         if conn not in slave_nodes:
             conn.sendall("exit;".encode())
             conn.close()
             return
+
+        if not reply:
+            print(f"{address[0]}:{address[1]} is down and has been removed from available slave nodes.")
+            slave_nodes.remove(conn)
+            return
+        
 
 def master_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
