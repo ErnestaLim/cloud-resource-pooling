@@ -8,6 +8,7 @@ from storage_factory import storage_nodes, storage_update
 
 slave_nodes: List[socket.socket] = []
 master_nodes: List[socket.socket] = []
+MINIMUM_STORAGE_NODES = 2
 
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
@@ -27,7 +28,7 @@ def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
 
     # If there is no X storage nodes, we assign them as dedicated storage node
-    if len(storage_nodes) < 1:
+    if len(storage_nodes) < MINIMUM_STORAGE_NODES:
         print(f"Requesting {address[0]} to be a storage node.")
         conn.sendall("connect_storage;".encode())
 
