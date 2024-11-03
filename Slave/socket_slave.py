@@ -67,7 +67,7 @@ def slave_evalute_llm(username, llm_name, eval_name):
     print("Task received. Evaluating LLM ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
-    output_dir = f"{script_dir}/output/{hash(llm_name)}_{eval_name}"
+    output_dir = f"{script_dir}/output/{llm_name.replace("/", "__")}"
     
     # Run a command and capture its output
     command = f"lm_eval --model hf --model_args pretrained={llm_name},trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
@@ -78,10 +78,8 @@ def slave_evalute_llm(username, llm_name, eval_name):
     
     if not json_files:
         print("No JSON files found in the directory. Task failed.")
-        return {
-            'success': False,
-            'message': "No JSON files found in the directory."
-        }
+        print("Restarting slave node ...")
+        exit(1)
 
     # Get the latest JSON file based on modification time
     latest_json_file = max(json_files, key=os.path.getmtime)
