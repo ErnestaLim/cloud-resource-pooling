@@ -81,11 +81,20 @@ def request_slaves(amount: int):
 
     return response_data['addresses']
 
-def get_storage_nodes():  
-    client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))
+def get_storage_nodes():
+    client_socket = socket.socket()  # Initiate connection to server
+    connected = False  # Flag to track connection status
 
-    # Send initial identifer
+    # Attempt to connect until successful
+    while not connected:
+        try:
+            client_socket.connect((host, port))
+            connected = True
+        except ConnectionRefusedError:
+            print("Failed to connect to server. Retrying ...")
+            time.sleep(2)  # Wait before retrying
+
+    # Send initial identifier
     message = "get_storage_nodes"
     client_socket.send(message.encode())
 
@@ -93,6 +102,7 @@ def get_storage_nodes():
     response = client_socket.recv(4096)
     storage_nodes = pickle.loads(response)
 
+    client_socket.close()  # Ensure socket is closed after receiving the response
     return storage_nodes
 
 slave_nodes: List[socket.socket] = []
