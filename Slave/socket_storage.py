@@ -9,25 +9,8 @@ receive_port = 51592
 
 storage_results = {}
 
-def storage_loop(client_socket: socket.socket):
-    client_socket.send(f"start_storage_node;{receive_port}".encode())
-    client_socket.settimeout(10)
+def storage_loop():
     threading.Thread(target=storage_thread).start()
-
-    while True:
-        time.sleep(5)
-        print("Heartbeat sent to server")
-        try:
-            client_socket.send("heartbeat".encode())
-        except BrokenPipeError:
-            print("Server has disconnected.")
-            break
-
-        data: List[str] = client_socket.recv(1024).decode().split(";")
-        action = data[0]
-
-        if action == 'heartbeat-ack':
-            print("Heartbeat acknowledged by server.")
 
 def storage_thread():
     storage_socket = socket.socket()

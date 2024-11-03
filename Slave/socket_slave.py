@@ -35,7 +35,10 @@ async def client_program(host: str, port: int):
 
             slave_loop(ip, port)
         elif action == 'connect_storage':
-            storage_loop(client_socket)
+            break
+    
+    if action == 'connect_storage':
+        storage_loop()
 
 def slave_loop(ip: str, port: int):
     print(f"Server assigned us to {ip}:{port}.")
