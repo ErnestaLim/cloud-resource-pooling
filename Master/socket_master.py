@@ -93,10 +93,6 @@ def handle_conn(conn: socket.socket, address: tuple):
     action = parameters[0]
     
     if action == "do_llm_eval":
-        print(parameters)
-        print(type(parameters))
-        save_tasks_to_file(parameters)
-
         task_process(conn, address, parameters)
     elif action == "connect":
         slave_process(conn, address)
@@ -107,6 +103,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
 
     if not llm_tasks:
         print(f"Received task from {username} -> {llm_name}.")
+        save_tasks_to_file(parameters)
         llm_tasks.append((username, llm_name))
         request_slaves(1)
 

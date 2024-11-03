@@ -15,7 +15,12 @@ def recursive_call():
             print("Task sent. Awaiting results ...")
 
             while True: 
-                response = client_socket.recv(1024) # Await response
+                try:
+                    response = client_socket.recv(1024) # Await response
+                except ConnectionAbortedError:
+                    print("Server disconnected. Trying to reconnect ...")
+                    reconnection_flag = 1
+                    break
 
                 if response == b'': # If response is empty, reconnect
                     print("Server disconnected with empty string. Trying to reconnect ...")
