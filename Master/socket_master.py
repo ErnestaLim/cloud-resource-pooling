@@ -118,6 +118,8 @@ def handle_conn(conn: socket.socket, address: tuple):
         slave_process(conn, address)
 
 def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
+    global llm_tasks
+    
     username = parameters[1]
     llm_name = parameters[2]
 
@@ -170,6 +172,9 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
         # Send delete action
         message = f"delete;{username};{llm_name}"
         storage_socket.send(message.encode())
+
+        # Delete from our own storage too
+        llm_tasks = [task for task in llm_tasks if not (task.username == username and task.llm_name == llm_name)]
 
         storage_socket.close()
     
