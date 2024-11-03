@@ -7,7 +7,6 @@ storage_nodes: List[tuple] = []
 
 def storage_update():
     while True:
-        print("Checking storage nodes...")
         downed_nodes = []
 
         for storage_node in storage_nodes:
@@ -21,7 +20,7 @@ def storage_update():
                 print(f"{storage_node[0]}:{storage_node[1]} is down.")
                 continue
 
-            print(f"{storage_node[0]}:{storage_node[1]} is alive.")
+            #print(f"{storage_node[0]}:{storage_node[1]} is alive.")
             _socket.close()
         
         # Remove all the downed nodes
@@ -31,8 +30,7 @@ def storage_update():
                 print(f"{downed_node[0]}:{downed_node[1]} has been removed from storage nodes.")
 
                 if len(slave_nodes) > 0:
-                    print("Assigning new storage nodes...")
-                    new_storage_nodes = slave_nodes.pop() # remove it, so that slave_process will disconnect the slave
+                    slave_nodes.pop() # remove it, so that slave_process will disconnect the slave
             
             # if there is not enough slave nodes, it's okay, we'll wait until new nodes join the network
             # socket_server.py will handle the creation of new storage nodes

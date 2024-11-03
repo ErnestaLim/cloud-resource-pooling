@@ -7,6 +7,26 @@ from const import client_host, receive_port
 
 storage_results = {}
 
+def prepare_storage_server(data: List[str]):
+    global storage_results
+
+    if len(data) == 3:
+        print(f"Connecting to leader storage server to duplicate storage ,..")
+        storage_ip = data[1]
+        storage_port = int(data[2])
+        leader_storage_socket = socket.socket()
+        leader_storage_socket.connect((storage_ip, storage_port))
+        leader_storage_socket.send(f"get_all".encode())
+
+        print("Connected to leader storage server. Awaiting storage data ...")
+
+        while True:
+            response_data = leader_storage_socket.recv(4096)
+            storage_results = pickle.loads(response_data)
+            print(storage_results)
+            print("Received storage data from leader storage server. Data duplicated locally. Ready to serve.")
+            break
+
 def storage_loop():
     storage_socket = socket.socket()
     storage_socket.bind((client_host, receive_port))
@@ -29,6 +49,8 @@ def handle_slave(conn, address):
         storage_retrieve(conn, address, parameters)
     elif action == "delete":
         storage_delete(conn, address, parameters)
+    elif action == "get_all":
+        storage_get_all(conn, address, parameters)
     elif action == "ping":
         pass
 
@@ -74,3 +96,6 @@ def storage_delete(conn, address, parameters):
     # Delete the results
     print(f"Deleted {username} -> {llm_name} results.")
     del storage_results[username][llm_name]
+
+def storage_get_all(conn, address, parameters):
+    conn.send(pickle.dumps(storage_results))

@@ -28,7 +28,12 @@ def slave_process(conn: socket.socket, address: tuple):
     # If there is no X storage nodes, we assign them as dedicated storage node
     if len(storage_nodes) < MINIMUM_STORAGE_NODES:
         print(f"Requesting {address[0]} to be a storage node.")
-        conn.sendall("connect_storage;".encode())
+
+        # If there is an existing storage node, add the IP as parameter, so the new storage node can duplicate the data
+        if len(storage_nodes) > 0:
+            conn.sendall(f"connect_storage;{storage_nodes[0][0]};{storage_nodes[0][1]}".encode())
+        else:
+            conn.sendall("connect_storage;".encode())
 
         while True:
             reply = conn.recv(1024).decode().split(";")

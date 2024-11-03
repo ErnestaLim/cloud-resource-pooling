@@ -11,7 +11,7 @@ import time
 from typing import List
 from helper import get_storage_nodes
 from const import client_host, send_port, receive_port
-from socket_storage import storage_loop
+from socket_storage import prepare_storage_server, storage_loop
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
@@ -33,6 +33,8 @@ async def client_program(host: str, port: int):
 
             slave_loop(ip, port)
         elif action == 'connect_storage':
+            # If the message comes with IP and Port of existing storage node, we connect and duplicate the data on ourselves
+            prepare_storage_server(data)
             client_socket.send(f"start_storage_node;{receive_port}".encode())
             break
         elif action == 'exit':
