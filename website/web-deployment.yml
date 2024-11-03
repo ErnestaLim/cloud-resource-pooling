@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+        - name: web-app-container
+          image: seannicho/sit-distributed-website # Replace with your Docker Hub username and image name
+          ports:
+            - containerPort: 5001
+          env:
+            - name: DB_HOST
+              value: "mysql-service"
+            - name: DB_USER
+              value: "user"
+            - name: DB_PASSWORD
+              value: "root"
+            - name: DB_NAME
+              value: "cloud"

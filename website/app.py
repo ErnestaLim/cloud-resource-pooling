@@ -15,10 +15,10 @@ app.secret_key = os.getenv('SECRET_KEY')
 
 # Database configuration
 db_config = {
-    'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', ''),
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'database': os.getenv('DB_NAME', 'G24_Cloud_Project_DB')
+    'user': os.getenv('DB_USER', 'user'),
+    'password': os.getenv('DB_PASSWORD', 'root'),
+    'host': os.getenv('DB_HOST', '127.0.0.1:3306'),
+    'database': os.getenv('DB_NAME', 'cloud')
 }
 
 # Initialize Flask-Login
@@ -192,4 +192,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5001)
