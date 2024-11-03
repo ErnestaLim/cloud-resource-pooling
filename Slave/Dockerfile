@@ -9,9 +9,6 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Create supervisord
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Clone the lm-evaluation-harness repository
 RUN git clone https://github.com/EleutherAI/lm-evaluation-harness.git /lm-evaluation-harness
 
@@ -22,10 +19,11 @@ RUN pip install -e .
 # Our own socket code
 WORKDIR /app
 COPY helper.py /app/helper.py
+COPY const.py /app/const.py
 COPY socket_storage.py /app/socket_storage.py
 COPY socket_slave.py /app/socket_slave.py
 
 EXPOSE 51592
 
-# Command to run the supervisord
+# Command to run the socket_slave.py
 ENTRYPOINT ["python3", "-u", "socket_slave.py"]
