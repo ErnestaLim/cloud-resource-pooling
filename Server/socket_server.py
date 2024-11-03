@@ -4,10 +4,10 @@ import socket
 import threading
 from typing import List
 import send_email
+from storage_factory import storage_nodes, storage_update
 
 slave_nodes: List[socket.socket] = []
 master_nodes: List[socket.socket] = []
-storage_nodes: List[tuple] = []
 
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
@@ -39,9 +39,7 @@ def slave_process(conn: socket.socket, address: tuple):
                 storage_port = reply[1]
                 storage_nodes.append((conn.getpeername()[0], int(storage_port)))
                 print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
-            elif action == "heartbeat":
-                print("Heartbeat received.")
-                conn.sendall("heartbeat-ack".encode())
+                return
     else:
         slave_nodes.append(conn)
     
@@ -99,6 +97,9 @@ def server_program():
 
     server_socket.listen(10) # Listen for up to X clients simultaneously
     print(f"Server listening on {host}:{port}")
+
+    # Storage thread
+    threading.Thread(target=storage_update).start()
 
     while True:
         conn, address = server_socket.accept() # Accept new connections

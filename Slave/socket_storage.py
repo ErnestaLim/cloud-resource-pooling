@@ -3,16 +3,11 @@ import socket
 import threading
 import time
 from typing import List
-
-client_host = "0.0.0.0"
-receive_port = 51592
+from const import client_host, receive_port
 
 storage_results = {}
 
 def storage_loop():
-    threading.Thread(target=storage_thread).start()
-
-def storage_thread():
     storage_socket = socket.socket()
     storage_socket.bind((client_host, receive_port))
     storage_socket.listen(10)
@@ -34,6 +29,8 @@ def handle_slave(conn, address):
         storage_retrieve(conn, address, parameters)
     elif action == "delete":
         storage_delete(conn, address, parameters)
+    elif action == "ping":
+        pass
 
 def storage_store(conn, address, parameters):
     username = parameters[1]

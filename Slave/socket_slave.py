@@ -9,11 +9,9 @@ import subprocess
 import threading
 import time
 from typing import List
-from socket_storage import storage_loop
 from helper import get_storage_nodes
-
-client_host = "0.0.0.0"
-send_port = 51591
+from const import client_host, send_port, receive_port
+from socket_storage import storage_loop
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
@@ -35,6 +33,7 @@ async def client_program(host: str, port: int):
 
             slave_loop(ip, port)
         elif action == 'connect_storage':
+            client_socket.send(f"start_storage_node;{receive_port}".encode())
             break
     
     if action == 'connect_storage':

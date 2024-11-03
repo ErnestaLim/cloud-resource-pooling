@@ -16,3 +16,9 @@ VALUES
 ('APP2', 88.54, 97.42, 65.02, 89.56, 85.56, 78.22, 84.54),
 ('APP3', 75.26, 75.19, 68.62, 85.78, 81.25, 85.26, 89.62),
 ('APP4', 98.54, 98.02, 78.78, 74.26, 84.05, 97.09, 76.49);
+
+CREATE TABLE IF NOT EXISTS Storage (
+    storage_id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,  -- 45 chars to accommodate IPv6
+    port INT NOT NULL
+);
