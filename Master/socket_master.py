@@ -46,17 +46,24 @@ def load_tasks_from_file() -> List[LLMTask]:
         return []
 
 def request_slaves(amount: int):
-    client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))
+    client_socket = socket.socket()  # Initiate connection to server
+    connected = False  # Flag to track connection status
 
-    # Send initial identifer
+    while not connected:
+        try:
+            client_socket.connect((host, port))
+            connected = True
+        except ConnectionRefusedError:
+            print("Failed to connect to server. Retrying ...")
+            time.sleep(2)
+
+    # Send initial identifier
     identification_data = "master"
     client_socket.send(identification_data.encode())
 
-    # Maintain connection till Server resolves client distribution
+    # Maintain connection till server resolves client distribution
     while True:
-        # Simulate waiting for other script to call
-        time.sleep(1)
+        time.sleep(2)
 
         client_socket.send(f"request;{amount}".encode())
         print(f"Requesting central server for {amount} slave(s) ...")
@@ -65,7 +72,7 @@ def request_slaves(amount: int):
         response = client_socket.recv(1024).decode()
         response_data = json.loads(response)
 
-        if response_data['success'] == False :
+        if response_data['success'] == False:
             print(f"Error: {response_data['message']}")
             print("Request failed. Retrying ...")
         else:
