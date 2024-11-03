@@ -101,7 +101,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
     username = parameters[1]
     llm_name = parameters[2]
 
-    if not llm_tasks:
+    if (username, llm_name) not in llm_tasks:
         print(f"Received task from {username} -> {llm_name}.")
         save_tasks_to_file(parameters)
         llm_tasks.append((username, llm_name))
