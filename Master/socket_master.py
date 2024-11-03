@@ -121,11 +121,13 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
     username = parameters[1]
     llm_name = parameters[2]
 
-    if (username, llm_name) not in llm_tasks:
+    if not any(task.username == username and task.llm_name == llm_name for task in llm_tasks):
         print(f"Received task from {username} -> {llm_name}.")
         llm_tasks.append(LLMTask(username, llm_name))
         save_tasks_to_file(llm_tasks)
         request_slaves(2)
+    else:
+        print(f"Task from {username} -> {llm_name} already exists. Skipping ...")
 
     results = {
         "tinyMMLU": None,
