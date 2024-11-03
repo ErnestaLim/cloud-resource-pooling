@@ -134,10 +134,10 @@ def login():
 # Route for the register page
 
 
+# Route for the register page
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
         email = request.form['email']
         password = request.form['password']
 
@@ -155,18 +155,10 @@ def register():
 
         cursor = connection.cursor()
         try:
-            # Check if username is provided and if it is unique
-            if username:
-                cursor.execute(
-                    "SELECT user_name FROM User WHERE user_name = %s", (username,))
-                if cursor.fetchone():
-                    flash('Username is already taken.', 'danger')
-                    return redirect(url_for('register'))
-
-            # Insert user into the database
+            # Insert user into the database without the user_name field
             cursor.execute(
-                "INSERT INTO User (user_name, user_email, user_password) VALUES (%s, %s, %s)",
-                (username if username else None, email, hashed_password)
+                "INSERT INTO User (user_email, user_password) VALUES (%s, %s)",
+                (email, hashed_password)
             )
             connection.commit()
             flash('Registration successful! Please log in.', 'success')
@@ -178,7 +170,6 @@ def register():
             connection.close()
 
     return render_template('register.html')
-
 
 # Route for the logout page
 
