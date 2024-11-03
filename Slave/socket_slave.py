@@ -35,6 +35,8 @@ async def client_program(host: str, port: int):
         elif action == 'connect_storage':
             client_socket.send(f"start_storage_node;{receive_port}".encode())
             break
+        elif action == 'exit':
+            exit(1)
     
     if action == 'connect_storage':
         storage_loop()

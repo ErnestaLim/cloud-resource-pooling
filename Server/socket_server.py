@@ -2,13 +2,11 @@ import json
 import pickle
 import socket
 import threading
+import time
 from typing import List
 import send_email
+from const import MINIMUM_STORAGE_NODES, slave_nodes, master_nodes
 from storage_factory import storage_nodes, storage_update
-
-slave_nodes: List[socket.socket] = []
-master_nodes: List[socket.socket] = []
-MINIMUM_STORAGE_NODES = 2
 
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
@@ -46,7 +44,11 @@ def slave_process(conn: socket.socket, address: tuple):
     
     # Wait until master node request for slave node
     while True:
-        pass
+        time.sleep(1)
+        if conn not in slave_nodes:
+            conn.sendall("exit;".encode())
+            conn.close()
+            return
 
 def master_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
@@ -74,7 +76,7 @@ def master_process(conn: socket.socket, address: tuple):
                 continue
             else:
                 addresses: List[socket.socket] = slave_nodes[:slave_requested]
-                slave_nodes = slave_nodes[slave_requested:]
+                slave_nodes = slave_nodes[slave_requested:] # remove slave nodes from list
 
                 # Tell slave node to connect to master node
                 for slave_node in addresses:
