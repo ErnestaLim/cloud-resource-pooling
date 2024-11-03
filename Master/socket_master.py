@@ -27,7 +27,7 @@ def save_tasks_to_file(tasks: List[str]):
     # Save to a JSON file
         with open(TASK_FILE, 'w') as f:
             json.dump(tasks, f)
-        print("Data saved successfully!")
+        #print("Data saved successfully!")
     except Exception as e:
         print(f"An error occurred while saving data: {e}")
     
@@ -113,7 +113,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
 
     # Wait for the task to complete, by checking with storage nodes
     while any(value is None for value in results.values()):
-        time.sleep(1)
+        time.sleep(2)
         print("Waiting for storage nodes to send results ...")
         storage_nodes = get_storage_nodes()
         
@@ -122,7 +122,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
             storage_socket.connect((storage_node[0], storage_node[1]))    
 
             # Send retrieve action
-            message = f"retrieve;bernard;160m"
+            message = f"retrieve;{username};{llm_name}"
             storage_socket.send(message.encode())
 
             # Receive response data from the server
@@ -146,7 +146,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
         storage_socket.connect((storage_node[0], storage_node[1]))    
 
         # Send delete action
-        message = f"delete;bernard;160m"
+        message = f"delete;{username};{llm_name}"
         storage_socket.send(message.encode())
 
         storage_socket.close()
