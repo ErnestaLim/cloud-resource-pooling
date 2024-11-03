@@ -1,8 +1,9 @@
+import argparse
 import pickle
 import time
 import socket
 
-def recursive_call():
+def recursive_call(llm_name: str):
     reconnection_flag = 1
 
     while reconnection_flag == 1:
@@ -11,7 +12,7 @@ def recursive_call():
             client_socket.connect(('192.168.1.5', 8786))
             reconnection_flag = 0
             print("Connected to server. Sending task ...")
-            client_socket.send("do_llm_eval;bernard;EleutherAI/pythia-160m".encode()) # Send request
+            client_socket.send(f"do_llm_eval;bernard;{llm_name}".encode()) # Send request
             print("Task sent. Awaiting results ...")
 
             while True: 
@@ -40,4 +41,9 @@ def recursive_call():
             time.sleep(10)
 
 if __name__ == "__main__":
-    recursive_call()
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Client program to connect to a server.')
+    parser.add_argument('--llm_name', type=str, default="EleutherAI/pythia-160m", help='LLM namespace from Hugging Face')
+    args = parser.parse_args()
+    
+    recursive_call(args.llm_name)
