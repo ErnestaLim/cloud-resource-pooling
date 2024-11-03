@@ -67,10 +67,10 @@ def slave_evalute_llm(username, llm_name, eval_name):
     print("Task received. Evaluating LLM ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
-    output_dir = f"{script_dir}/output/EleutherAI__pythia-160m"
+    output_dir = f"{script_dir}/output/{hash(llm_name)}_{eval_name}"
     
     # Run a command and capture its output
-    command = "lm_eval --model hf --model_args pretrained=EleutherAI/pythia-160m,trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
+    command = f"lm_eval --model hf --model_args pretrained={llm_name},trust_remote_code=True --tasks tinyMMLU --device cuda:0 --output_path output"  # Example command, you can replace it with any command you need
     subprocess.run(command, shell=True, check=True)
 
     # Find the latest JSON file in the output/EleutherAI/pythia-160m directory

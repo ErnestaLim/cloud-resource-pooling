@@ -11,7 +11,7 @@ def recursive_call():
             client_socket.connect(('192.168.1.5', 8786))
             reconnection_flag = 0
             print("Connected to server. Sending task ...")
-            client_socket.send("do_llm_eval;bernard;160m".encode()) # Send request
+            client_socket.send("do_llm_eval;bernard;EleutherAI/pythia-160m".encode()) # Send request
             print("Task sent. Awaiting results ...")
 
             while True: 
