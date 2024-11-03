@@ -64,7 +64,7 @@ def slave_loop(ip: str, port: int):
             slave_evalute_llm(username, llm_name, eval_name)
 
 def slave_evalute_llm(username, llm_name, eval_name):
-    print("Task received. Evaluating LLM ...")
+    print(f"Task received. Evaluating {llm_name} on {eval_name} metrics ...")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     output_dir = f"{script_dir}/output/{llm_name.replace("/", "__")}"

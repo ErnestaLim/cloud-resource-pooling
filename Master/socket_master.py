@@ -9,6 +9,7 @@ import threading
 import time
 import asyncio
 from typing import List
+from llm_tasks import LLMTask
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description='Client program to connect to a server.')
@@ -22,25 +23,27 @@ port = args.port  # Server port number
 # Store tasks locally in json
 TASK_FILE = "test.json"
 
-def save_tasks_to_file(tasks: List[str]):
+def save_tasks_to_file(tasks: List[LLMTask]):
     try:
-    # Save to a JSON file
+        # Convert tasks to a list of dictionaries
+        tasks_data = [task.to_dict() for task in tasks]
         with open(TASK_FILE, 'w') as f:
-            json.dump(tasks, f)
+            json.dump(tasks_data, f)
         #print("Data saved successfully!")
     except Exception as e:
         print(f"An error occurred while saving data: {e}")
-    
-def load_tasks_from_file() -> List[tuple]:
-    try: 
+
+def load_tasks_from_file() -> List[LLMTask]:
+    try:
         if os.path.exists(TASK_FILE):
             with open(TASK_FILE, 'r') as f:
-                tasks = json.load(f)
+                tasks_data = json.load(f)
             print("Tasks loaded from file.")
-            return [tuple(task) for task in tasks]
+            return [LLMTask.from_dict(task) for task in tasks_data]
         return []
     except Exception as e:
         print(f"An error occurred while loading data: {e}")
+        return []
 
 def request_slaves(amount: int):
     client_socket = socket.socket() # Initiate connection to server
@@ -86,7 +89,7 @@ def get_storage_nodes():
     return storage_nodes
 
 slave_nodes: List[socket.socket] = []
-llm_tasks: List[tuple] = load_tasks_from_file() # Initialize llm_tasks by loading from file else []
+llm_tasks: List[LLMTask] = load_tasks_from_file() # Initialize llm_tasks by loading from file else []
 
 def handle_conn(conn: socket.socket, address: tuple):
     parameters = conn.recv(1024).decode().split(";")
@@ -103,9 +106,9 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
 
     if (username, llm_name) not in llm_tasks:
         print(f"Received task from {username} -> {llm_name}.")
-        save_tasks_to_file(parameters)
-        llm_tasks.append((username, llm_name))
-        request_slaves(1)
+        llm_tasks.append(LLMTask(username, llm_name))
+        save_tasks_to_file(llm_tasks)
+        request_slaves(2)
 
     results = {
         "tinyMMLU": None,
@@ -114,7 +117,7 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
     # Wait for the task to complete, by checking with storage nodes
     while any(value is None for value in results.values()):
         time.sleep(2)
-        print("Waiting for storage nodes to send results ...")
+        #print("Waiting for storage nodes to send results ...")
         storage_nodes = get_storage_nodes()
         
         for storage_node in storage_nodes:
@@ -160,12 +163,23 @@ def slave_process(conn: socket.socket, address: tuple):
     print(f"Slave {address[0]}:{address[1]} connected.")
     slave_nodes.append(conn)
 
-    task = llm_tasks.pop(0)
-    conn.send(f"do_llm_eval;{task[0]};{task[1]};tinyMMLU".encode())
+    # Get the first LLMTask that is not assigned
+    current_job: LLMTask = next((task for task in llm_tasks if not task.assigned), None)
 
-    # Keep connection alive till new task is received
-    while True:
-        pass
+    # If there is no task, we don't need to slave. So we disconnect it by returning this function.
+    if current_job is None:
+        return
+
+    # If there is a task, we assign it to the slave. First, we determine which task it is.
+    if current_job.tinyMMLU < 2:
+        conn.send(f"do_llm_eval;{current_job.username};{current_job.llm_name};tinyMMLU".encode())
+        current_job.tinyMMLU += 1
+    
+    # After you finish the above if statement, the task is now 2. So if this is the last beanchmark and it's two, we pop it from our task list
+    if current_job.tinyMMLU >= 2:
+        current_job.assigned = True
+    
+    save_tasks_to_file(llm_tasks)
 
 async def master_loop():
     host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP

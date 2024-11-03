@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy your scripts into the container
+COPY llm_tasks.py /app/llm_tasks.py
 COPY socket_master.py /app/socket_master.py
 
 # Expose the necessary port for the Dask scheduler
