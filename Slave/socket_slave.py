@@ -89,7 +89,6 @@ def slave_evalute_llm(username, llm_name, eval_name):
         json_content = json.load(f)
         results = json_content['results']
     
-    results = {'tinyMMLU': {'alias': 'tinyMMLU', 'acc_norm,none': 0.29423820925289884, 'acc_norm_stderr,none': 'N/A'}}
     print("Evaluation completed. Sending results ...")
 
     storage_nodes = get_storage_nodes()
