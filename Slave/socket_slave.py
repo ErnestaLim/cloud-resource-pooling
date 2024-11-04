@@ -92,7 +92,7 @@ def slave_evalute_llm(username, llm_name, eval_name):
     print("Evaluation completed. Sending results ...")
 
     storage_nodes = get_storage_nodes()
-    print(storage_nodes)
+    #print(storage_nodes)
     print("Sending storage nodes results ...")
     
     # Send to stroage nodes
