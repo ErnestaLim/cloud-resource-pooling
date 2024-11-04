@@ -10,14 +10,13 @@ import threading
 import time
 from typing import List
 from helper import get_storage_nodes
-from const import client_host, send_port, receive_port
 from socket_storage import prepare_storage_server, storage_loop
 import timeit
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
-    client_socket.bind((client_host, send_port))
     client_socket.connect((host, port))
+    client_host, send_port = client_socket.getsockname()
     identification_data = "slave"
     client_socket.send(identification_data.encode()) # Send initial identifer
 
@@ -36,13 +35,10 @@ async def client_program(host: str, port: int):
         elif action == 'connect_storage':
             # If the message comes with IP and Port of existing storage node, we connect and duplicate the data on ourselves
             prepare_storage_server(data)
-            client_socket.send(f"start_storage_node;{receive_port}".encode())
+            storage_loop(client_socket)
             break
         elif action == 'exit':
             exit(1)
-    
-    if action == 'connect_storage':
-        storage_loop()
 
 def slave_loop(ip: str, port: int):
     print(f"Server assigned us to {ip}:{port}.")

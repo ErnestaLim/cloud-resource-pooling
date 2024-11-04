@@ -3,7 +3,6 @@ import socket
 import threading
 import time
 from typing import List
-from const import client_host, receive_port
 
 storage_results = {}
 
@@ -27,11 +26,12 @@ def prepare_storage_server(data: List[str]):
             print("Received storage data from leader storage server. Data duplicated locally. Ready to serve.")
             break
 
-def storage_loop():
+def storage_loop(client_socket: socket.socket):
     storage_socket = socket.socket()
-    storage_socket.bind((client_host, receive_port))
     storage_socket.listen(10)
+    client_host, receive_port = storage_socket.getsockname()
     print(f"Storage server listening on {client_host}:{receive_port}")
+    client_socket.send(f"start_storage_node;{receive_port}".encode())
 
     while True:
         # Wait for new connections

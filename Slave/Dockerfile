@@ -19,7 +19,6 @@ RUN pip install -e .
 # Our own socket code
 WORKDIR /app
 COPY helper.py /app/helper.py
-COPY const.py /app/const.py
 COPY socket_storage.py /app/socket_storage.py
 COPY socket_slave.py /app/socket_slave.py
 
