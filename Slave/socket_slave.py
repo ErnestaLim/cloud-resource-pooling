@@ -12,6 +12,7 @@ from typing import List
 from helper import get_storage_nodes
 from const import client_host, send_port, receive_port
 from socket_storage import prepare_storage_server, storage_loop
+import timeit
 
 async def client_program(host: str, port: int): 
     client_socket = socket.socket() # Initiate connection to server
@@ -61,7 +62,9 @@ def slave_loop(ip: str, port: int):
             username = parameters[1]
             llm_name = parameters[2]
             eval_name = parameters[3]
-            slave_evalute_llm(username, llm_name, eval_name)
+            execution_time = timeit.timeit(lambda: slave_evalute_llm(username, llm_name, eval_name), number=1)
+            print(f"Execution time: {execution_time}")
+            exit(1)
 
 def slave_evalute_llm(username, llm_name, eval_name):
     print(f"Task received. Evaluating {llm_name} on {eval_name} metrics ...")
@@ -106,7 +109,6 @@ def slave_evalute_llm(username, llm_name, eval_name):
     
     print("Results sent to storage nodes.")
     print("Restarting slave node ...")
-    exit(1)
 
 if __name__ == '__main__':
     # Set up argument parser
