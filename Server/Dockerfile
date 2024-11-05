@@ -8,7 +8,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get remove --purge -y \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install mysql-connector-python
 
 # Copy your script into the container
 COPY /send_email.py /app/send_email.py

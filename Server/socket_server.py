@@ -1,12 +1,22 @@
 import json
+import os
 import pickle
 import socket
 import threading
 import time
 from typing import List
+
+import mysql
 from  send_email import send_email
 from const import MINIMUM_STORAGE_NODES, slave_nodes, master_nodes
-from storage_factory import storage_nodes, storage_update
+from storage_factory import save_storage_node, storage_nodes, storage_update
+
+db_config = {
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'root'),
+    'host': os.getenv('DB_HOST', '127.0.0.1:3306'),
+    'database': os.getenv('DB_NAME', 'cloud')
+}
 
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
@@ -45,6 +55,7 @@ def slave_process(conn: socket.socket, address: tuple):
                 storage_port = reply[2]
                 storage_nodes.append((storage_ip, int(storage_port)))
                 print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
+                save_storage_node(storage_ip, storage_port)
                 return
     else:
         slave_nodes.append(conn)
@@ -125,4 +136,23 @@ def server_program():
         client_thread.start()
 
 if __name__ == '__main__':
+    # Connect to MySQL
+    connection = mysql.connector.connect(**db_config)
+
+    if connection.is_connected():
+        cursor = connection.cursor()
+
+        # Fetch all records from the Storage table
+        fetch_query = "SELECT ip_address, port FROM Storage;"
+        cursor.execute(fetch_query)
+
+        # Retrieve all rows
+        records = cursor.fetchall()
+
+        # Print each record
+        for row in records:
+            storage_nodes.append((row[0], row[1]))
+    
+    print(f"Storage nodes: {storage_nodes}")
+
     server_program()
