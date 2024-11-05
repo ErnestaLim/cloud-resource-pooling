@@ -11,11 +11,11 @@ load_dotenv()
 
 # Flask app initialization
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('SECRET_KEY', "31212sdsad21")
 
 # Database configuration
 db_config = {
-    'user': os.getenv('DB_USER', 'user'),
+    'user': os.getenv('DB_USER', 'root'),
     'password': os.getenv('DB_PASSWORD', 'root'),
     'host': os.getenv('DB_HOST', '127.0.0.1:3306'),
     'database': os.getenv('DB_NAME', 'cloud')
