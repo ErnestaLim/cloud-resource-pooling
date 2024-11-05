@@ -1,10 +1,12 @@
 import json
+import pickle
 import socket
 import threading
+import time
 from typing import List
-
-slave_nodes: List[socket.socket] = []
-master_nodes: List[socket.socket] = []
+import send_email
+from const import MINIMUM_STORAGE_NODES, slave_nodes, master_nodes
+from storage_factory import storage_nodes, storage_update
 
 def handle_client(conn: socket.socket, address: tuple):
     client_type = conn.recv(1024).decode()
@@ -13,26 +15,52 @@ def handle_client(conn: socket.socket, address: tuple):
 
     if client_type == 'slave':
         slave_process(conn, address)
-    else:
-        send_email()
+    elif client_type == 'master':
         master_process(conn, address)
+    elif client_type == 'get_storage_nodes':
+        conn.sendall(pickle.dumps(storage_nodes))
+    else:
+        conn.close()
 
 def slave_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
-    slave_nodes.append(conn)
+
+    # If there is no X storage nodes, we assign them as dedicated storage node
+    if len(storage_nodes) < MINIMUM_STORAGE_NODES:
+        print(f"Requesting {address[0]} to be a storage node.")
+
+        # If there is an existing storage node, add the IP as parameter, so the new storage node can duplicate the data
+        if len(storage_nodes) > 0:
+            conn.sendall(f"connect_storage;{storage_nodes[0][0]};{storage_nodes[0][1]}".encode())
+        else:
+            conn.sendall("connect_storage;".encode())
+
+        while True:
+            reply = conn.recv(1024).decode().split(";")
+            action = reply[0]
+
+            if action == "start_storage_node":
+                storage_port = reply[1]
+                storage_nodes.append((conn.getpeername()[0], int(storage_port)))
+                print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
+                return
+    else:
+        slave_nodes.append(conn)
+    
     # Wait until master node request for slave node
     while True:
-        pass
-    
-def send_email():
-    host = socket.gethostbyname(socket.gethostname()) # Initiate connection to server
-    port = 61000  # Server port number    
-    client_socket = socket.socket() # Initiate connection to server
-    client_socket.connect((host, port))    
+        reply = conn.recv(1024).decode()
 
-    # Send initial identifer
-    email = 'resourcepoolingbot@gmail.com'
-    client_socket.send(email.encode())
+        if conn not in slave_nodes:
+            conn.sendall("exit;".encode())
+            conn.close()
+            return
+
+        if not reply:
+            print(f"{address[0]}:{address[1]} is down and has been removed from available slave nodes.")
+            slave_nodes.remove(conn)
+            return
+        
 
 def master_process(conn: socket.socket, address: tuple):
     global slave_nodes, master_nodes
@@ -44,13 +72,13 @@ def master_process(conn: socket.socket, address: tuple):
         req_type: str = data[0]
         req_args: List[str] = data[1:]
 
-        if req_type == 'request':
+        if req_type == 'request' or req_type == 'request_storage':
             slave_requested: int = int(req_args[0])
             print(f"{address[0]}:{address[1]} requested for {slave_requested} slaves.")
             print(f"We have {len(slave_nodes)} slave nodes.")
 
             # Check if we have enough slave
-            if len(slave_nodes) == 0:
+            if len(slave_nodes) < slave_requested:
                 response = {
                     "success": False,
                     "message": "Not enough slave nodes."
@@ -60,7 +88,7 @@ def master_process(conn: socket.socket, address: tuple):
                 continue
             else:
                 addresses: List[socket.socket] = slave_nodes[:slave_requested]
-                slave_nodes = slave_nodes[slave_requested:]
+                slave_nodes = slave_nodes[slave_requested:] # remove slave nodes from list
 
                 # Tell slave node to connect to master node
                 for slave_node in addresses:
@@ -75,11 +103,8 @@ def master_process(conn: socket.socket, address: tuple):
                 conn.sendall(json.dumps(response).encode())
 
                 continue
-    
 
 def server_program():
-    # host = '192.168.1.100'  # Server IP
-    # port = 5000  # Server port number
     host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP
     port = 5000 # Define server port    
     server_socket = socket.socket() # Create socket instance
@@ -87,6 +112,9 @@ def server_program():
 
     server_socket.listen(10) # Listen for up to X clients simultaneously
     print(f"Server listening on {host}:{port}")
+
+    # Storage thread
+    threading.Thread(target=storage_update).start()
 
     while True:
         conn, address = server_socket.accept() # Accept new connections
