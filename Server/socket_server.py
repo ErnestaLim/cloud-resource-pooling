@@ -109,6 +109,7 @@ def server_program():
     host = socket.gethostbyname(socket.gethostname()) # Get the server hostname or IP
     port = 5000 # Define server port    
     server_socket = socket.socket() # Create socket instance
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((host, port)) # Bind the server to the host and port
 
     server_socket.listen(10) # Listen for up to X clients simultaneously
