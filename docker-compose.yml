@@ -30,6 +30,16 @@ services:
       default:
         aliases:
           - server
+  
+  email:
+    build:
+      context: ./EmailService
+    ports:
+      - "61000:61000"
+    networks:
+      default:
+        aliases:
+          - email
 
 networks:
   default:
