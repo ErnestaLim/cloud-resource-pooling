@@ -1,48 +1,36 @@
 version: '3.8'
 
 services:
-  emailservice:
-    image: cloud-resource-pooling/EmailService:latest
-    container_name: emailservice
+  website:
+    build:
+      context: ./website
     ports:
-      - "61000:61000"  # Adjust the ports if needed
+      - "5001:5001"
+    depends_on:
+      - mysql
+      - server
+
+  mysql:
+    build:
+      context: ./MySQL
     environment:
-      - ENV_VAR=example_value
-    networks:
-      - app-network
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cloud
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    ports:
+      - "3306:3306"
 
   server:
-    image: cloud-resource-pooling/Server:latest
-    container_name: server
+    build:
+      context: ./Server
     ports:
-      - "5000:5000"  # Adjust the ports if needed
-    environment:
-      - ENV_VAR=example_value
-    depends_on:
-      - emailservice
+      - "5000:5000"
     networks:
-      - app-network
-
-  slave:
-    image: cloud-resource-pooling/Slave:latest
-    container_name: slave
-    environment:
-      - ENV_VAR=example_value
-    depends_on:
-      - server
-    networks:
-      - app-network
-
-  website:
-    image: cloud-resource-pooling/Website:latest
-    container_name: website
-    ports:
-      - "5001:5000"  # Adjust the ports if needed
-    depends_on:
-      - server
-    networks:
-      - app-network
+      default:
+        aliases:
+          - server
 
 networks:
-  app-network:
+  default:
     driver: bridge
