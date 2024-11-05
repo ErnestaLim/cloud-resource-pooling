@@ -40,8 +40,9 @@ def slave_process(conn: socket.socket, address: tuple):
             action = reply[0]
 
             if action == "start_storage_node":
-                storage_port = reply[1]
-                storage_nodes.append((conn.getpeername()[0], int(storage_port)))
+                storage_ip = reply[1]
+                storage_port = reply[2]
+                storage_nodes.append((storage_ip, int(storage_port)))
                 print(f"Storage {storage_nodes[-1][0]}:{storage_nodes[-1][1]} node connected.")
                 return
     else:

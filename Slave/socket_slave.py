@@ -13,7 +13,7 @@ from helper import get_storage_nodes
 from socket_storage import prepare_storage_server, storage_loop
 import timeit
 
-async def client_program(host: str, port: int): 
+async def client_program(host: str, port: int, storage_ip: str, storage_port: int): 
     client_socket = socket.socket() # Initiate connection to server
     client_socket.connect((host, port))
     client_host, send_port = client_socket.getsockname()
@@ -35,7 +35,7 @@ async def client_program(host: str, port: int):
         elif action == 'connect_storage':
             # If the message comes with IP and Port of existing storage node, we connect and duplicate the data on ourselves
             prepare_storage_server(data)
-            storage_loop(client_socket)
+            storage_loop(client_socket, storage_ip, storage_port)
             break
         elif action == 'exit':
             exit(1)
@@ -111,6 +111,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Client program to connect to a server.')
     parser.add_argument('--ip', type=str, default=socket.gethostbyname(socket.gethostname()), help='Server IP address')
     parser.add_argument('--port', type=int, default=5000, help='Server port number')
+    parser.add_argument('--storage_ip', type=str, help='If connected as storage node, provide the IP address of the storage server')
+    parser.add_argument('--storage_port', type=int, help='If connected as storage node, provide the port number of the storage server')
     args = parser.parse_args()
     
-    asyncio.run(client_program(args.ip, args.port))
+    asyncio.run(client_program(args.ip, args.port, args.storage_ip, args.storage_port))

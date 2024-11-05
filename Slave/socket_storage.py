@@ -5,6 +5,7 @@ import time
 from typing import List
 
 storage_results = {}
+internal_storage_port = 51592
 
 def prepare_storage_server(data: List[str]):
     global storage_results
@@ -26,12 +27,12 @@ def prepare_storage_server(data: List[str]):
             print("Received storage data from leader storage server. Data duplicated locally. Ready to serve.")
             break
 
-def storage_loop(client_socket: socket.socket):
+def storage_loop(client_socket: socket.socket, storage_ip, storage_port):
     storage_socket = socket.socket()
+    storage_socket.bind(('', internal_storage_port))
     storage_socket.listen(10)
-    client_host, receive_port = storage_socket.getsockname()
-    print(f"Storage server listening on {client_host}:{receive_port}")
-    client_socket.send(f"start_storage_node;{receive_port}".encode())
+    print(f"Storage server listening on {storage_ip}:{storage_port}")
+    client_socket.send(f"start_storage_node;{storage_ip};{storage_port}".encode())
 
     while True:
         # Wait for new connections
