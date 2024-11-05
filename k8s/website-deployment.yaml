@@ -24,5 +24,14 @@ spec:
             - containerPort: 5001
               protocol: TCP
           resources: {}
+          env:
+            - name: DB_HOST
+              value: "mysql"
+            - name: DB_USER
+              value: "user"
+            - name: DB_PASSWORD
+              value: "root"
+            - name: DB_NAME
+              value: "cloud"
       restartPolicy: Always
 status: {}
