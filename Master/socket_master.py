@@ -127,12 +127,13 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
         print(f"Received task from {username} -> {llm_name}.")
         llm_tasks.append(LLMTask(username, llm_name))
         save_tasks_to_file(llm_tasks)
-        request_slaves(2)
+        request_slaves(4)
     else:
         print(f"Task from {username} -> {llm_name} already exists. Skipping ...")
 
     results = {
         "tinyMMLU": None,
+        "tinyHellaswag": None,
     }
 
     # Wait for the task to complete, by checking with storage nodes
@@ -186,23 +187,37 @@ def task_process(conn: socket.socket, address: tuple, parameters: List[str]):
 def slave_process(conn: socket.socket, address: tuple):
     print(f"Slave {address[0]}:{address[1]} connected.")
     slave_nodes.append(conn)
-
+    
     # Get the first LLMTask that is not assigned
     current_job: LLMTask = next((task for task in llm_tasks if not task.assigned), None)
-
+    
     # If there is no task, we don't need to slave. So we disconnect it by returning this function.
     if current_job is None:
         return
 
+    while current_job.accessed:
+        pass
+
+    # Consumer, Producer thread blocking
+    current_job.accessed = True
+
     # If there is a task, we assign it to the slave. First, we determine which task it is.
     if current_job.tinyMMLU < 2:
+        #print("send mmlu")
+        #print(current_job.tinyMMLU)
         conn.send(f"do_llm_eval;{current_job.username};{current_job.llm_name};tinyMMLU".encode())
         current_job.tinyMMLU += 1
+    elif current_job.tinyHellaswag < 2:
+        #print("send hellaswag")
+        #print(current_job.tinyHellaswag)
+        conn.send(f"do_llm_eval;{current_job.username};{current_job.llm_name};tinyHellaswag".encode())
+        current_job.tinyHellaswag += 1
     
     # After you finish the above if statement, the task is now 2. So if this is the last beanchmark and it's two, we pop it from our task list
-    if current_job.tinyMMLU >= 2:
+    if current_job.tinyHellaswag >= 2:
         current_job.assigned = True
     
+    current_job.accessed = False
     save_tasks_to_file(llm_tasks)
 
 async def master_loop():
