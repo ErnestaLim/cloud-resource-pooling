@@ -5,8 +5,11 @@ metadata:
 spec:
   type: NodePort  # Change this to LoadBalancer if you're using a cloud provider that supports it
   ports:
-    - port: 5000       # The port that will be exposed on the service
+    - name: "5000"
+      port: 5000       # The port that will be exposed on the service
       targetPort: 5000 # The port that your application is running on
       nodePort: 30000  # Optional: specify a nodePort if you want a specific port
   selector:
     io.kompose.service: server
+status:
+  loadBalancer: {}
