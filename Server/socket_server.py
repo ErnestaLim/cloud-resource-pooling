@@ -136,23 +136,4 @@ def server_program():
         client_thread.start()
 
 if __name__ == '__main__':
-    # Connect to MySQL
-    connection = mysql.connector.connect(**db_config)
-
-    if connection.is_connected():
-        cursor = connection.cursor()
-
-        # Fetch all records from the Storage table
-        fetch_query = "SELECT ip_address, port FROM Storage;"
-        cursor.execute(fetch_query)
-
-        # Retrieve all rows
-        records = cursor.fetchall()
-
-        # Print each record
-        for row in records:
-            storage_nodes.append((row[0], row[1]))
-    
-    print(f"Storage nodes: {storage_nodes}")
-
     server_program()
