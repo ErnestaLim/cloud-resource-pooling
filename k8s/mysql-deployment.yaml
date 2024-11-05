@@ -7,7 +7,6 @@ spec:
   selector:
     matchLabels:
       io.kompose.service: mysql
-  strategy: {}
   template:
     metadata:
       labels:
@@ -29,8 +28,13 @@ spec:
           name: sit-distibuted-mysql
           ports:
             - containerPort: 3306
-              hostPort: 3306
               protocol: TCP
-          resources: {}
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql 
       restartPolicy: Always
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-storage
 status: {}
