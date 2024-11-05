@@ -80,7 +80,6 @@ def email_server():
     # Enable the server to accept connections (max 5 queued connections)
     server_socket.listen(5)
     print(f'Server listening on {host}:{port}')
-
     while True:
         # Accept a connection
         client_socket, addr = server_socket.accept()

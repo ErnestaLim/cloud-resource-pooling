@@ -4,7 +4,7 @@ import socket
 import threading
 import time
 from typing import List
-import send_email
+from  send_email import send_email
 from const import MINIMUM_STORAGE_NODES, slave_nodes, master_nodes
 from storage_factory import storage_nodes, storage_update
 
@@ -16,6 +16,7 @@ def handle_client(conn: socket.socket, address: tuple):
     if client_type == 'slave':
         slave_process(conn, address)
     elif client_type == 'master':
+        send_email()
         master_process(conn, address)
     elif client_type == 'get_storage_nodes':
         conn.sendall(pickle.dumps(storage_nodes))

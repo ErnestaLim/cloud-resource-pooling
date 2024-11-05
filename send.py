@@ -10,7 +10,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     start_time = time.time()
-    client = LLMEvalClient('192.168.1.5', 8786)
+    client = LLMEvalClient('192.168.20.175', 8786)
     results = client.do_llm_eval(username=args.username, llm_name=args.llm_name)
     end_time = time.time()
     execution_time = end_time - start_time
